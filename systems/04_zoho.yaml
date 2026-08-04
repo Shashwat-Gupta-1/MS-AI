@@ -1,0 +1,22 @@
+system_name: Zoho People
+description: >
+  HR/employee master data from Zoho People. Modeled here as sharing employee_id
+  with the core employees table for MVP simplicity — in a real integration this
+  system would likely have its own ID space with no clean shared key, which is
+  exactly the kind of gap entity resolution (see earlier discussion) would need
+  to close before this could join cleanly against `employees`.
+domain_tags: [hr, ops]
+tables:
+  - name: zoho_employee_records
+    row_count: 1000
+    columns:
+      - {name: zoho_record_id, type: STRING, generator: uuid, primary_key: true}
+      - {name: employee_id, type: STRING, generator: ref, ref_table: employees, ref_key: employee_id}
+      - {name: designation, type: STRING, generator: weighted_choice, values: {associate: 0.35, senior_associate: 0.25, team_lead: 0.15, assistant_manager: 0.15, manager: 0.1}}
+      - {name: department, type: STRING, generator: weighted_choice, values: {sales: 0.3, collections: 0.25, operations: 0.2, credit: 0.15, hr: 0.1}}
+      - {name: date_of_joining, type: DATE, generator: date_range, start: "2019-01-01", end: "2026-06-01"}
+      - {name: employment_type, type: STRING, generator: weighted_choice, values: {full_time: 0.8, contract: 0.15, intern: 0.05}}
+      - {name: reporting_manager, type: STRING, generator: person_name}
+      - {name: work_location, type: STRING, generator: city}
+      - {name: leave_balance_days, type: FLOAT64, generator: uniform, min: 0, max: 30}
+      - {name: performance_rating, type: STRING, generator: weighted_choice, values: {"1": 0.05, "2": 0.15, "3": 0.45, "4": 0.25, "5": 0.1}}

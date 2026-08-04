@@ -1,0 +1,42 @@
+system_name: Base Entities
+description: Shared master data referenced by every downstream system (LOS, LMS, incentive, etc.)
+domain_tags: [kyc, ops]
+tables:
+  - name: branches
+    row_count: 120
+    columns:
+      - {name: branch_id, type: STRING, generator: uuid, primary_key: true}
+      - {name: branch_name, type: STRING, generator: branch_name}
+      - {name: region, type: STRING, generator: choice, values: [North, South, East, West, Central]}
+      - {name: state, type: STRING, generator: choice, values: [Rajasthan, Maharashtra, Delhi, Karnataka, Gujarat, Tamil Nadu, Uttar Pradesh, West Bengal]}
+
+  - name: employees
+    row_count: 900
+    columns:
+      - {name: employee_id, type: STRING, generator: uuid, primary_key: true}
+      - {name: name, type: STRING, generator: person_name}
+      - {name: role, type: STRING, generator: weighted_choice, values: {loan_officer: 0.35, collections_agent: 0.3, branch_manager: 0.1, sales_rep: 0.15, kyc_officer: 0.1}}
+      - {name: branch_id, type: STRING, generator: ref, ref_table: branches, ref_key: branch_id}
+      - {name: joined_date, type: DATE, generator: date_range, start: "2019-01-01", end: "2026-06-01"}
+
+  - name: customers
+    row_count: 500000
+    columns:
+      - {name: customer_id, type: STRING, generator: uuid, primary_key: true}
+      - {name: name, type: STRING, generator: person_name}
+      - {name: dob, type: DATE, generator: date_range, start: "1960-01-01", end: "2005-01-01"}
+      - {name: pan_number, type: STRING, generator: pan}
+      - {name: phone, type: STRING, generator: phone}
+      - {name: city, type: STRING, generator: city}
+      - {name: state, type: STRING, generator: choice, values: [Rajasthan, Maharashtra, Delhi, Karnataka, Gujarat, Tamil Nadu, Uttar Pradesh, West Bengal]}
+      - {name: occupation, type: STRING, generator: weighted_choice, values: {salaried: 0.45, self_employed: 0.3, business_owner: 0.15, farmer: 0.1}}
+      - {name: income_band, type: STRING, generator: weighted_choice, values: {"0-3L": 0.3, "3-6L": 0.35, "6-12L": 0.25, "12L+": 0.1}}
+      - {name: created_at, type: DATE, generator: date_range, start: "2020-01-01", end: "2026-08-01"}
+
+  - name: loan_products
+    row_count: 5
+    columns:
+      - {name: product_id, type: STRING, generator: uuid, primary_key: true}
+      - {name: loan_type, type: STRING, generator: fixed_sequence, values: [gold, personal, vehicle, business, microfinance]}
+      - {name: min_amount, type: FLOAT64, generator: uniform, min: 10000, max: 20000}
+      - {name: max_amount, type: FLOAT64, generator: uniform, min: 500000, max: 2000000}

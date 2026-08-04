@@ -1,0 +1,42 @@
+system_name: LMS
+description: Loan Management System — disbursed loans, repayment schedules, collections
+domain_tags: [loan, collections]
+tables:
+  - name: loans
+    row_count: 148000
+    columns:
+      - {name: loan_id, type: STRING, generator: uuid, primary_key: true}
+      - {name: application_id, type: STRING, generator: ref, ref_table: loan_applications, ref_key: application_id, ref_filter: "status=approved"}
+      - {name: customer_id, type: STRING, generator: same_as_ref, ref_table: loan_applications, ref_key: customer_id, join_on: application_id}
+      - {name: product_id, type: STRING, generator: same_as_ref, ref_table: loan_applications, ref_key: product_id, join_on: application_id}
+      - {name: branch_id, type: STRING, generator: same_as_ref, ref_table: loan_applications, ref_key: branch_id, join_on: application_id}
+      - {name: disbursed_amount, type: FLOAT64, generator: normal, mean: 240000, stddev: 85000, min_clip: 15000}
+      - {name: interest_rate, type: FLOAT64, generator: uniform, min: 8, max: 24}
+      - {name: tenure_months, type: INT64, generator: weighted_choice, values: {12: 0.2, 24: 0.3, 36: 0.25, 48: 0.15, 60: 0.1}}
+      - {name: disbursement_date, type: DATE, generator: date_range, start: "2023-01-15", end: "2026-07-01"}
+      - {name: status, type: STRING, generator: weighted_choice, values: {active: 0.68, closed: 0.2, npa: 0.09, written_off: 0.03}}
+
+  - name: emi_schedule
+    type: amortization_schedule
+    source_table: loans
+    description: One row per EMI, per loan — generated via reducing-balance amortization, not random sampling
+
+  - name: payments
+    type: derived_payments
+    source_table: emi_schedule
+    description: One row per EMI that has actually been paid, with realistic on-time/late/missed patterns
+
+  - name: overdue_accounts
+    type: derived_overdue
+    source_table: emi_schedule
+    description: One row per loan currently overdue, computed from unpaid EMIs past their due date
+
+  - name: collections_activity
+    row_count: 220000
+    columns:
+      - {name: activity_id, type: STRING, generator: uuid, primary_key: true}
+      - {name: loan_id, type: STRING, generator: ref, ref_table: overdue_accounts, ref_key: loan_id}
+      - {name: employee_id, type: STRING, generator: ref_filtered, ref_table: employees, ref_key: employee_id, filter_col: role, filter_val: collections_agent}
+      - {name: activity_type, type: STRING, generator: choice, values: [call, field_visit, legal_notice, sms_reminder]}
+      - {name: activity_date, type: DATE, generator: date_range, start: "2024-01-01", end: "2026-08-01"}
+      - {name: outcome, type: STRING, generator: weighted_choice, values: {promised_to_pay: 0.4, no_response: 0.35, paid: 0.15, disputed: 0.1}}

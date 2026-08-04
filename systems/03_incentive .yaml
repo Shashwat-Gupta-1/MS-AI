@@ -1,0 +1,17 @@
+system_name: Incentive Engine
+description: Employee incentive/payout calculations tied to loan sourcing and collections performance
+domain_tags: [incentive, hr]
+tables:
+  - name: incentive_payouts
+    row_count: 1000
+    columns:
+      - {name: incentive_id, type: STRING, generator: uuid, primary_key: true}
+      - {name: employee_id, type: STRING, generator: ref_filtered, ref_table: employees, ref_key: employee_id, filter_col: role, filter_val: loan_officer}
+      - {name: loan_id, type: STRING, generator: ref, ref_table: loans, ref_key: loan_id}
+      - {name: incentive_type, type: STRING, generator: weighted_choice, values: {loan_sourcing: 0.4, collections_bonus: 0.25, cross_sell: 0.2, retention: 0.15}}
+      - {name: period_month, type: DATE, generator: date_range, start: "2024-01-01", end: "2026-07-01"}
+      - {name: base_amount, type: FLOAT64, generator: normal, mean: 8000, stddev: 2500, min_clip: 500}
+      - {name: bonus_amount, type: FLOAT64, generator: uniform, min: 0, max: 6000}
+      - {name: deduction_amount, type: FLOAT64, generator: uniform, min: 0, max: 1500}
+      - {name: payout_status, type: STRING, generator: weighted_choice, values: {paid: 0.75, pending: 0.15, hold: 0.1}}
+      - {name: payout_date, type: DATE, generator: date_range, start: "2024-01-05", end: "2026-08-01"}

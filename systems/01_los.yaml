@@ -1,0 +1,33 @@
+system_name: LOS
+description: Loan Origination System — applications, underwriting decisions, before disbursement
+domain_tags: [loan]
+tables:
+  - name: loan_applications
+    row_count: 250000
+    columns:
+      - {name: application_id, type: STRING, generator: uuid, primary_key: true}
+      - {name: customer_id, type: STRING, generator: ref, ref_table: customers, ref_key: customer_id}
+      - {name: product_id, type: STRING, generator: ref, ref_table: loan_products, ref_key: product_id}
+      - {name: branch_id, type: STRING, generator: ref, ref_table: branches, ref_key: branch_id}
+      - {name: requested_amount, type: FLOAT64, generator: normal, mean: 250000, stddev: 90000, min_clip: 15000}
+      - {name: application_date, type: DATE, generator: date_range, start: "2023-01-01", end: "2026-08-01"}
+      - {name: status, type: STRING, generator: weighted_choice, values: {approved: 0.62, rejected: 0.23, pending: 0.15}}
+      - {name: rejection_reason, type: STRING, generator: weighted_choice_nullable, values: {low_credit_score: 0.4, income_mismatch: 0.3, incomplete_kyc: 0.2, high_existing_debt: 0.1}, null_when: "status != rejected"}
+
+  - name: kyc_documents
+    row_count: 500000
+    columns:
+      - {name: kyc_id, type: STRING, generator: uuid, primary_key: true}
+      - {name: customer_id, type: STRING, generator: ref, ref_table: customers, ref_key: customer_id}
+      - {name: doc_type, type: STRING, generator: choice, values: [PAN, Aadhaar, Passport, Voter_ID]}
+      - {name: verification_status, type: STRING, generator: weighted_choice, values: {verified: 0.85, pending: 0.1, rejected: 0.05}}
+      - {name: verified_at, type: DATE, generator: date_range, start: "2020-01-01", end: "2026-08-01"}
+
+  - name: customer_risk_scores
+    row_count: 500000
+    columns:
+      - {name: score_id, type: STRING, generator: uuid, primary_key: true}
+      - {name: customer_id, type: STRING, generator: ref, ref_table: customers, ref_key: customer_id}
+      - {name: credit_score, type: FLOAT64, generator: normal, mean: 680, stddev: 90, min_clip: 300, max_clip: 900}
+      - {name: risk_category, type: STRING, generator: weighted_choice, values: {low: 0.4, medium: 0.4, high: 0.2}}
+      - {name: scored_at, type: DATE, generator: date_range, start: "2023-01-01", end: "2026-08-01"}
