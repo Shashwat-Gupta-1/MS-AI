@@ -1,0 +1,221 @@
+system_name: Treasury
+description: Funding sources and treasury-level cash flow transactions backing loan disbursements
+domain_tags:
+- treasury
+- finance
+tables:
+- name: funding_sources
+  row_count: 10000
+  columns:
+  - name: funding_source_id
+    generator: uuid
+    primary_key: true
+  - name: source_name
+    generator: fixed_sequence
+    values:
+    - Bank Term Loan
+    - NCD Issuance
+    - Commercial Paper
+    - ECB
+    - Securitization
+    - Equity Infusion
+    - Subordinated Debt
+    - Bank Cash Credit
+  - name: source_type
+    generator: weighted_choice
+    values:
+      bank_loan: 0.35
+      market_borrowing: 0.3
+      securitization: 0.2
+      equity: 0.15
+  - name: lender_name
+    generator: branch_name
+  - name: sanctioned_amount
+    generator: normal
+    mean: 50000000
+    stddev: 20000000
+    min_clip: 1000000
+  - name: drawn_amount
+    generator: normal
+    mean: 40000000
+    stddev: 18000000
+    min_clip: 0
+  - name: interest_rate
+    generator: uniform
+    min: 6
+    max: 13
+  - name: tenure_years
+    generator: uniform
+    min: 1
+    max: 10
+  - name: sanction_date
+    generator: date_range
+    start: '2021-01-01'
+    end: '2026-06-01'
+  - name: maturity_date
+    generator: date_range
+    start: '2026-06-02'
+    end: '2033-01-01'
+  - name: region
+    generator: choice
+    values:
+    - North
+    - South
+    - East
+    - West
+    - Central
+  - name: state
+    generator: choice
+    values:
+    - Rajasthan
+    - Maharashtra
+    - Delhi
+    - Karnataka
+    - Gujarat
+    - Tamil Nadu
+    - Uttar Pradesh
+    - West Bengal
+  - name: credit_rating
+    generator: choice
+    values:
+    - AAA
+    - AA+
+    - AA
+    - A+
+    - A
+    - BBB+
+  - name: collateral_type
+    generator: choice
+    values:
+    - loan_receivables
+    - fixed_deposit
+    - property
+    - unsecured
+  - name: repayment_frequency
+    generator: choice
+    values:
+    - monthly
+    - quarterly
+    - bullet
+  - name: status
+    generator: weighted_choice
+    values:
+      active: 0.75
+      closed: 0.2
+      defaulted: 0.05
+  - name: relationship_manager
+    generator: person_name
+  - name: processing_fee
+    generator: normal
+    mean: 250000
+    stddev: 100000
+    min_clip: 0
+  - name: covenant_breach_flag
+    generator: weighted_choice
+    values:
+      'yes': 0.05
+      'no': 0.95
+  - name: created_at
+    generator: date_range
+    start: '2021-01-01'
+    end: '2026-06-01'
+- name: treasury_transactions
+  row_count: 80000
+  columns:
+  - name: transaction_id
+    generator: uuid
+    primary_key: true
+  - name: funding_source_id
+    generator: ref
+    ref_table: funding_sources
+    ref_key: funding_source_id
+  - name: transaction_type
+    generator: weighted_choice
+    values:
+      drawdown: 0.3
+      interest_payment: 0.35
+      principal_repayment: 0.25
+      fee_payment: 0.1
+  - name: transaction_date
+    generator: date_range
+    start: '2021-01-01'
+    end: '2026-08-01'
+  - name: amount
+    generator: normal
+    mean: 1500000
+    stddev: 800000
+    min_clip: 1000
+  - name: currency
+    generator: fixed_sequence
+    values:
+    - INR
+  - name: settlement_mode
+    generator: choice
+    values:
+    - rtgs
+    - neft
+    - internal_transfer
+  - name: approved_by
+    generator: person_name
+  - name: region
+    generator: choice
+    values:
+    - North
+    - South
+    - East
+    - West
+    - Central
+  - name: book_balance_after
+    generator: normal
+    mean: 35000000
+    stddev: 15000000
+    min_clip: 0
+  - name: reconciliation_status
+    generator: weighted_choice
+    values:
+      reconciled: 0.85
+      pending: 0.1
+      flagged: 0.05
+  - name: value_date
+    generator: date_range
+    start: '2021-01-01'
+    end: '2026-08-01'
+  - name: counterparty_bank
+    generator: branch_name
+  - name: interest_component
+    generator: normal
+    mean: 80000
+    stddev: 40000
+    min_clip: 0
+  - name: principal_component
+    generator: normal
+    mean: 900000
+    stddev: 500000
+    min_clip: 0
+  - name: is_intercompany
+    generator: weighted_choice
+    values:
+      'yes': 0.05
+      'no': 0.95
+  - name: processed_by_system
+    generator: choice
+    values:
+    - core_treasury
+    - manual_entry
+    - batch_upload
+  - name: audit_flag
+    generator: weighted_choice
+    values:
+      'yes': 0.03
+      'no': 0.97
+  - name: narration_code
+    generator: choice
+    values:
+    - DRWDN
+    - INTPMT
+    - PRINRPY
+    - FEEPMT
+  - name: created_at
+    generator: date_range
+    start: '2021-01-01'
+    end: '2026-08-01'

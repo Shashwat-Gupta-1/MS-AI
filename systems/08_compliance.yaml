@@ -1,0 +1,230 @@
+system_name: Compliance
+description: Audit logs and regulatory compliance flags across lending operations
+domain_tags:
+- compliance
+- audit
+- risk
+tables:
+- name: audit_logs
+  row_count: 200000
+  columns:
+  - name: audit_id
+    generator: uuid
+    primary_key: true
+  - name: entity_type
+    generator: choice
+    values:
+    - loan
+    - customer
+    - employee
+    - branch
+    - kyc_document
+  - name: action_type
+    generator: weighted_choice
+    values:
+      create: 0.3
+      update: 0.45
+      delete: 0.05
+      view: 0.2
+  - name: performed_by_employee_id
+    generator: ref
+    ref_table: employees
+    ref_key: employee_id
+  - name: branch_id
+    generator: ref
+    ref_table: branches
+    ref_key: branch_id
+  - name: action_timestamp
+    generator: date_range
+    start: '2023-01-01'
+    end: '2026-08-01'
+  - name: ip_region
+    generator: choice
+    values:
+    - North
+    - South
+    - East
+    - West
+    - Central
+  - name: severity
+    generator: weighted_choice
+    values:
+      low: 0.6
+      medium: 0.3
+      high: 0.08
+      critical: 0.02
+  - name: system_source
+    generator: choice
+    values:
+    - LOS
+    - LMS
+    - CRM
+    - Treasury
+    - Insurance
+    - Zoho
+  - name: field_changed
+    generator: choice
+    values:
+    - status
+    - amount
+    - kyc_status
+    - contact_info
+    - role
+    - none
+  - name: old_value_flag
+    generator: weighted_choice
+    values:
+      'yes': 0.5
+      'no': 0.5
+  - name: session_id
+    generator: uuid
+  - name: device_type
+    generator: choice
+    values:
+    - desktop
+    - mobile
+    - api
+  - name: approval_required
+    generator: weighted_choice
+    values:
+      'yes': 0.2
+      'no': 0.8
+  - name: approved_flag
+    generator: weighted_choice
+    values:
+      'yes': 0.75
+      'no': 0.25
+  - name: anomaly_score
+    generator: uniform
+    min: 0
+    max: 1
+  - name: flagged_for_review
+    generator: weighted_choice
+    values:
+      'yes': 0.05
+      'no': 0.95
+  - name: retention_category
+    generator: choice
+    values:
+    - standard
+    - legal_hold
+    - regulatory
+  - name: log_version
+    generator: fixed_sequence
+    values:
+    - v1
+    - v2
+  - name: created_at
+    generator: date_range
+    start: '2023-01-01'
+    end: '2026-08-01'
+- name: compliance_flags
+  row_count: 15000
+  columns:
+  - name: flag_id
+    generator: uuid
+    primary_key: true
+  - name: customer_id
+    generator: ref
+    ref_table: customers
+    ref_key: customer_id
+  - name: loan_id
+    generator: ref
+    ref_table: loans
+    ref_key: loan_id
+  - name: flag_type
+    generator: weighted_choice
+    values:
+      aml_watchlist: 0.2
+      pep_check: 0.15
+      kyc_mismatch: 0.3
+      high_risk_geography: 0.15
+      duplicate_pan: 0.2
+  - name: flag_severity
+    generator: weighted_choice
+    values:
+      low: 0.4
+      medium: 0.35
+      high: 0.2
+      critical: 0.05
+  - name: raised_date
+    generator: date_range
+    start: '2023-01-01'
+    end: '2026-08-01'
+  - name: resolved_date
+    generator: date_range
+    start: '2023-01-02'
+    end: '2026-08-01'
+  - name: status
+    generator: weighted_choice
+    values:
+      open: 0.25
+      under_investigation: 0.2
+      resolved: 0.45
+      escalated: 0.1
+  - name: investigated_by
+    generator: person_name
+  - name: regulatory_body
+    generator: choice
+    values:
+    - RBI
+    - FIU-IND
+    - internal_audit
+    - none
+  - name: reported_externally
+    generator: weighted_choice
+    values:
+      'yes': 0.1
+      'no': 0.9
+  - name: region
+    generator: choice
+    values:
+    - North
+    - South
+    - East
+    - West
+    - Central
+  - name: state
+    generator: choice
+    values:
+    - Rajasthan
+    - Maharashtra
+    - Delhi
+    - Karnataka
+    - Gujarat
+    - Tamil Nadu
+    - Uttar Pradesh
+    - West Bengal
+  - name: resolution_notes_flag
+    generator: weighted_choice
+    values:
+      'yes': 0.7
+      'no': 0.3
+  - name: recurrence_count
+    generator: uniform
+    min: 0
+    max: 5
+  - name: risk_score_at_flag
+    generator: uniform
+    min: 300
+    max: 900
+  - name: branch_id
+    generator: ref
+    ref_table: branches
+    ref_key: branch_id
+  - name: escalation_level
+    generator: choice
+    values:
+    - branch
+    - regional
+    - corporate
+    - board
+  - name: sla_breach
+    generator: weighted_choice
+    values:
+      'yes': 0.1
+      'no': 0.9
+  - name: created_at
+    generator: date_range
+    start: '2023-01-01'
+    end: '2026-08-01'

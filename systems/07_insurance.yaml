@@ -1,0 +1,220 @@
+system_name: Insurance
+description: Loan-linked insurance policies and claims (credit life / asset cover cross-sell)
+domain_tags:
+- insurance
+- cross_sell
+tables:
+- name: insurance_policies
+  row_count: 90000
+  columns:
+  - name: policy_id
+    generator: uuid
+    primary_key: true
+  - name: loan_id
+    generator: ref
+    ref_table: loans
+    ref_key: loan_id
+  - name: customer_id
+    generator: same_as_ref
+    ref_table: loans
+    ref_key: customer_id
+    join_on: loan_id
+  - name: policy_type
+    generator: weighted_choice
+    values:
+      credit_life: 0.5
+      asset_cover: 0.3
+      health_rider: 0.2
+  - name: insurer_name
+    generator: branch_name
+  - name: sum_assured
+    generator: normal
+    mean: 250000
+    stddev: 90000
+    min_clip: 10000
+  - name: premium_amount
+    generator: normal
+    mean: 3500
+    stddev: 1500
+    min_clip: 200
+  - name: premium_frequency
+    generator: choice
+    values:
+    - single
+    - annual
+    - monthly
+  - name: policy_start_date
+    generator: date_range
+    start: '2023-01-01'
+    end: '2026-08-01'
+  - name: policy_end_date
+    generator: date_range
+    start: '2024-01-01'
+    end: '2031-08-01'
+  - name: status
+    generator: weighted_choice
+    values:
+      active: 0.7
+      lapsed: 0.15
+      matured: 0.1
+      cancelled: 0.05
+  - name: sold_by_employee_id
+    generator: ref_filtered
+    ref_table: employees
+    ref_key: employee_id
+    filter_col: role
+    filter_val: loan_officer
+  - name: region
+    generator: choice
+    values:
+    - North
+    - South
+    - East
+    - West
+    - Central
+  - name: state
+    generator: choice
+    values:
+    - Rajasthan
+    - Maharashtra
+    - Delhi
+    - Karnataka
+    - Gujarat
+    - Tamil Nadu
+    - Uttar Pradesh
+    - West Bengal
+  - name: nominee_relation
+    generator: choice
+    values:
+    - spouse
+    - parent
+    - child
+    - sibling
+  - name: underwriting_decision
+    generator: weighted_choice
+    values:
+      accepted: 0.85
+      loaded_premium: 0.1
+      declined: 0.05
+  - name: commission_amount
+    generator: normal
+    mean: 400
+    stddev: 150
+    min_clip: 0
+  - name: renewal_due
+    generator: weighted_choice
+    values:
+      'yes': 0.2
+      'no': 0.8
+  - name: digital_issuance
+    generator: weighted_choice
+    values:
+      'yes': 0.6
+      'no': 0.4
+  - name: created_at
+    generator: date_range
+    start: '2023-01-01'
+    end: '2026-08-01'
+- name: insurance_claims
+  row_count: 12000
+  columns:
+  - name: claim_id
+    generator: uuid
+    primary_key: true
+  - name: policy_id
+    generator: ref
+    ref_table: insurance_policies
+    ref_key: policy_id
+  - name: claim_type
+    generator: choice
+    values:
+    - death
+    - disability
+    - critical_illness
+    - asset_damage
+  - name: claim_amount
+    generator: normal
+    mean: 220000
+    stddev: 95000
+    min_clip: 5000
+  - name: claim_filed_date
+    generator: date_range
+    start: '2023-06-01'
+    end: '2026-08-01'
+  - name: claim_status
+    generator: weighted_choice
+    values:
+      approved: 0.55
+      pending: 0.25
+      rejected: 0.15
+      under_review: 0.05
+  - name: rejection_reason
+    generator: weighted_choice_nullable
+    values:
+      documentation_incomplete: 0.4
+      policy_lapsed: 0.3
+      exclusion_clause: 0.3
+    null_when: claim_status != rejected
+  - name: settlement_amount
+    generator: normal
+    mean: 190000
+    stddev: 90000
+    min_clip: 0
+  - name: settlement_date
+    generator: date_range
+    start: '2023-07-01'
+    end: '2026-08-01'
+  - name: processed_by
+    generator: person_name
+  - name: region
+    generator: choice
+    values:
+    - North
+    - South
+    - East
+    - West
+    - Central
+  - name: turnaround_days
+    generator: uniform
+    min: 1
+    max: 120
+  - name: documentation_score
+    generator: uniform
+    min: 0
+    max: 100
+  - name: investigator_assigned
+    generator: weighted_choice
+    values:
+      'yes': 0.2
+      'no': 0.8
+  - name: fraud_flag
+    generator: weighted_choice
+    values:
+      'yes': 0.03
+      'no': 0.97
+  - name: appeal_filed
+    generator: weighted_choice
+    values:
+      'yes': 0.08
+      'no': 0.92
+  - name: customer_satisfaction_score
+    generator: uniform
+    min: 1
+    max: 5
+  - name: channel_reported
+    generator: choice
+    values:
+    - branch
+    - call_center
+    - app
+    - agent
+  - name: payout_mode
+    generator: choice
+    values:
+    - neft
+    - cheque
+    - loan_adjustment
+  - name: created_at
+    generator: date_range
+    start: '2023-06-01'
+    end: '2026-08-01'

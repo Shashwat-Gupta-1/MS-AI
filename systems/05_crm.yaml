@@ -1,0 +1,433 @@
+system_name: CRM
+description: Lead generation, campaign management, and pre-conversion customer engagement
+domain_tags:
+- leads
+- marketing
+- sales
+tables:
+- name: campaigns
+  row_count: 12000
+  columns:
+  - name: campaign_id
+    generator: uuid
+    primary_key: true
+  - name: campaign_name
+    generator: fixed_sequence
+    values:
+    - Diwali Gold Loan Push
+    - Monsoon Personal Loan
+    - Vehicle Loan Blitz
+    - SME Growth Drive
+    - Digital First-Time Borrower
+    - Referral Rewards
+    - New Year Cashback
+    - Farm Credit Outreach
+  - name: channel
+    generator: weighted_choice
+    values:
+      digital: 0.4
+      referral: 0.25
+      branch_walkin: 0.2
+      telecalling: 0.15
+  - name: campaign_type
+    generator: choice
+    values:
+    - awareness
+    - acquisition
+    - retention
+    - cross_sell
+  - name: product_id
+    generator: ref
+    ref_table: loan_products
+    ref_key: product_id
+  - name: target_region
+    generator: choice
+    values:
+    - North
+    - South
+    - East
+    - West
+    - Central
+  - name: target_state
+    generator: choice
+    values: &id001
+    - Rajasthan
+    - Maharashtra
+    - Delhi
+    - Karnataka
+    - Gujarat
+    - Tamil Nadu
+    - Uttar Pradesh
+    - West Bengal
+  - name: start_date
+    generator: date_range
+    start: '2023-01-01'
+    end: '2026-06-01'
+  - name: end_date
+    generator: date_range
+    start: '2023-02-01'
+    end: '2026-08-01'
+  - name: budget_allocated
+    generator: normal
+    mean: 500000
+    stddev: 150000
+    min_clip: 20000
+  - name: budget_spent
+    generator: normal
+    mean: 420000
+    stddev: 140000
+    min_clip: 0
+  - name: leads_target
+    generator: uniform
+    min: 200
+    max: 5000
+  - name: impressions
+    generator: uniform
+    min: 10000
+    max: 2000000
+  - name: clicks
+    generator: uniform
+    min: 500
+    max: 100000
+  - name: conversion_rate_target
+    generator: uniform
+    min: 1
+    max: 15
+  - name: cost_per_lead
+    generator: normal
+    mean: 150
+    stddev: 60
+    min_clip: 10
+  - name: campaign_manager_id
+    generator: ref_filtered
+    ref_table: employees
+    ref_key: employee_id
+    filter_col: role
+    filter_val: sales_rep
+  - name: status
+    generator: weighted_choice
+    values:
+      active: 0.3
+      completed: 0.55
+      paused: 0.15
+  - name: priority
+    generator: weighted_choice
+    values:
+      high: 0.3
+      medium: 0.5
+      low: 0.2
+  - name: created_at
+    generator: date_range
+    start: '2023-01-01'
+    end: '2026-06-01'
+- name: leads
+  row_count: 60000
+  columns:
+  - name: lead_id
+    generator: uuid
+    primary_key: true
+  - name: campaign_id
+    generator: ref
+    ref_table: campaigns
+    ref_key: campaign_id
+  - name: lead_name
+    generator: person_name
+  - name: phone
+    generator: phone
+  - name: city
+    generator: city
+  - name: state
+    generator: choice
+    values: *id001
+  - name: source_channel
+    generator: weighted_choice
+    values:
+      digital: 0.4
+      referral: 0.25
+      branch_walkin: 0.2
+      telecalling: 0.15
+  - name: product_id
+    generator: ref
+    ref_table: loan_products
+    ref_key: product_id
+  - name: requested_amount_interest
+    generator: normal
+    mean: 220000
+    stddev: 90000
+    min_clip: 10000
+  - name: lead_score
+    generator: uniform
+    min: 0
+    max: 100
+  - name: status
+    generator: weighted_choice
+    values:
+      new: 0.3
+      contacted: 0.25
+      qualified: 0.2
+      converted: 0.15
+      dropped: 0.1
+  - name: assigned_employee_id
+    generator: ref_filtered
+    ref_table: employees
+    ref_key: employee_id
+    filter_col: role
+    filter_val: sales_rep
+  - name: created_at
+    generator: date_range
+    start: '2023-01-01'
+    end: '2026-08-01'
+  - name: last_contacted_at
+    generator: date_range
+    start: '2023-01-02'
+    end: '2026-08-01'
+  - name: follow_up_count
+    generator: uniform
+    min: 0
+    max: 12
+  - name: conversion_probability
+    generator: uniform
+    min: 0
+    max: 1
+  - name: age_band
+    generator: choice
+    values:
+    - 18-25
+    - 26-35
+    - 36-45
+    - 46-60
+    - 60+
+  - name: occupation
+    generator: weighted_choice
+    values:
+      salaried: 0.45
+      self_employed: 0.3
+      business_owner: 0.15
+      farmer: 0.1
+  - name: income_band
+    generator: weighted_choice
+    values:
+      0-3L: 0.3
+      3-6L: 0.35
+      6-12L: 0.25
+      12L+: 0.1
+  - name: is_existing_customer
+    generator: weighted_choice
+    values:
+      'yes': 0.2
+      'no': 0.8
+- name: lead_activities
+  row_count: 150000
+  columns:
+  - name: activity_id
+    generator: uuid
+    primary_key: true
+  - name: lead_id
+    generator: ref
+    ref_table: leads
+    ref_key: lead_id
+  - name: employee_id
+    generator: ref_filtered
+    ref_table: employees
+    ref_key: employee_id
+    filter_col: role
+    filter_val: sales_rep
+  - name: activity_type
+    generator: choice
+    values:
+    - call
+    - sms
+    - email
+    - whatsapp
+    - branch_visit
+  - name: activity_date
+    generator: date_range
+    start: '2023-01-01'
+    end: '2026-08-01'
+  - name: outcome
+    generator: weighted_choice
+    values:
+      interested: 0.3
+      not_interested: 0.25
+      callback_requested: 0.2
+      no_answer: 0.15
+      converted: 0.1
+  - name: duration_minutes
+    generator: uniform
+    min: 1
+    max: 45
+  - name: channel_cost
+    generator: normal
+    mean: 20
+    stddev: 8
+    min_clip: 0
+  - name: sentiment_score
+    generator: uniform
+    min: -1
+    max: 1
+  - name: follow_up_scheduled
+    generator: weighted_choice
+    values:
+      'yes': 0.4
+      'no': 0.6
+  - name: priority
+    generator: weighted_choice
+    values:
+      high: 0.2
+      medium: 0.5
+      low: 0.3
+  - name: region
+    generator: choice
+    values:
+    - North
+    - South
+    - East
+    - West
+    - Central
+  - name: device_type
+    generator: choice
+    values:
+    - mobile
+    - desktop
+    - tablet
+    - in_person
+  - name: agent_notes_flag
+    generator: weighted_choice
+    values:
+      'yes': 0.6
+      'no': 0.4
+  - name: time_of_day
+    generator: choice
+    values:
+    - morning
+    - afternoon
+    - evening
+    - night
+  - name: day_of_week_type
+    generator: choice
+    values:
+    - weekday
+    - weekend
+  - name: attempt_number
+    generator: uniform
+    min: 1
+    max: 8
+  - name: resulted_in_lead_status_change
+    generator: weighted_choice
+    values:
+      'yes': 0.35
+      'no': 0.65
+  - name: escalated
+    generator: weighted_choice
+    values:
+      'yes': 0.05
+      'no': 0.95
+  - name: created_at
+    generator: date_range
+    start: '2023-01-01'
+    end: '2026-08-01'
+- name: campaign_responses
+  row_count: 45000
+  columns:
+  - name: response_id
+    generator: uuid
+    primary_key: true
+  - name: campaign_id
+    generator: ref
+    ref_table: campaigns
+    ref_key: campaign_id
+  - name: lead_id
+    generator: ref
+    ref_table: leads
+    ref_key: lead_id
+  - name: response_channel
+    generator: choice
+    values:
+    - sms_link
+    - email_click
+    - call_back
+    - form_submit
+    - branch_visit
+  - name: response_date
+    generator: date_range
+    start: '2023-01-01'
+    end: '2026-08-01'
+  - name: engagement_score
+    generator: uniform
+    min: 0
+    max: 100
+  - name: clicked
+    generator: weighted_choice
+    values:
+      'yes': 0.55
+      'no': 0.45
+  - name: converted
+    generator: weighted_choice
+    values:
+      'yes': 0.2
+      'no': 0.8
+  - name: device_type
+    generator: choice
+    values:
+    - mobile
+    - desktop
+    - tablet
+  - name: region
+    generator: choice
+    values:
+    - North
+    - South
+    - East
+    - West
+    - Central
+  - name: time_to_respond_hours
+    generator: uniform
+    min: 0
+    max: 240
+  - name: bounce_flag
+    generator: weighted_choice
+    values:
+      'yes': 0.15
+      'no': 0.85
+  - name: form_completion_pct
+    generator: uniform
+    min: 0
+    max: 100
+  - name: ab_test_variant
+    generator: choice
+    values:
+    - A
+    - B
+    - control
+  - name: cost_attributed
+    generator: normal
+    mean: 80
+    stddev: 30
+    min_clip: 0
+  - name: referral_source
+    generator: choice
+    values:
+    - organic
+    - paid_search
+    - social
+    - sms
+    - email
+    - field_agent
+  - name: utm_source_flag
+    generator: weighted_choice
+    values:
+      'yes': 0.6
+      'no': 0.4
+  - name: session_duration_seconds
+    generator: uniform
+    min: 5
+    max: 1800
+  - name: repeat_response
+    generator: weighted_choice
+    values:
+      'yes': 0.1
+      'no': 0.9
+  - name: created_at
+    generator: date_range
+    start: '2023-01-01'
+    end: '2026-08-01'

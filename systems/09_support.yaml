@@ -1,0 +1,221 @@
+system_name: Customer Support
+description: Support ticketing and customer service interactions across the loan lifecycle
+domain_tags:
+- support
+- customer_service
+tables:
+- name: support_tickets
+  row_count: 70000
+  columns:
+  - name: ticket_id
+    generator: uuid
+    primary_key: true
+  - name: customer_id
+    generator: ref
+    ref_table: customers
+    ref_key: customer_id
+  - name: loan_id
+    generator: ref
+    ref_table: loans
+    ref_key: loan_id
+  - name: category
+    generator: weighted_choice
+    values:
+      payment_issue: 0.3
+      statement_request: 0.2
+      complaint: 0.15
+      kyc_update: 0.15
+      closure_request: 0.1
+      general_query: 0.1
+  - name: channel
+    generator: choice
+    values:
+    - call_center
+    - app
+    - email
+    - branch
+    - whatsapp
+  - name: priority
+    generator: weighted_choice
+    values:
+      low: 0.4
+      medium: 0.4
+      high: 0.15
+      urgent: 0.05
+  - name: status
+    generator: weighted_choice
+    values:
+      open: 0.2
+      in_progress: 0.25
+      resolved: 0.45
+      closed: 0.1
+  - name: created_at
+    generator: date_range
+    start: '2023-01-01'
+    end: '2026-08-01'
+  - name: resolved_at
+    generator: date_range
+    start: '2023-01-02'
+    end: '2026-08-01'
+  - name: assigned_employee_id
+    generator: ref
+    ref_table: employees
+    ref_key: employee_id
+  - name: branch_id
+    generator: ref
+    ref_table: branches
+    ref_key: branch_id
+  - name: region
+    generator: choice
+    values:
+    - North
+    - South
+    - East
+    - West
+    - Central
+  - name: csat_score
+    generator: uniform
+    min: 1
+    max: 5
+  - name: reopened_count
+    generator: uniform
+    min: 0
+    max: 4
+  - name: first_response_minutes
+    generator: uniform
+    min: 1
+    max: 1440
+  - name: resolution_hours
+    generator: uniform
+    min: 0.5
+    max: 240
+  - name: escalated
+    generator: weighted_choice
+    values:
+      'yes': 0.08
+      'no': 0.92
+  - name: language_preference
+    generator: choice
+    values:
+    - English
+    - Hindi
+    - Regional
+  - name: sla_breach
+    generator: weighted_choice
+    values:
+      'yes': 0.12
+      'no': 0.88
+  - name: sentiment
+    generator: choice
+    values:
+    - positive
+    - neutral
+    - negative
+- name: ticket_interactions
+  row_count: 160000
+  columns:
+  - name: interaction_id
+    generator: uuid
+    primary_key: true
+  - name: ticket_id
+    generator: ref
+    ref_table: support_tickets
+    ref_key: ticket_id
+  - name: employee_id
+    generator: ref
+    ref_table: employees
+    ref_key: employee_id
+  - name: interaction_type
+    generator: choice
+    values:
+    - note
+    - call
+    - email_sent
+    - status_change
+    - customer_reply
+  - name: interaction_date
+    generator: date_range
+    start: '2023-01-01'
+    end: '2026-08-01'
+  - name: channel
+    generator: choice
+    values:
+    - call_center
+    - app
+    - email
+    - branch
+    - whatsapp
+  - name: duration_minutes
+    generator: uniform
+    min: 0
+    max: 60
+  - name: outcome
+    generator: choice
+    values:
+    - resolved
+    - pending_customer
+    - pending_internal
+    - escalated
+    - no_change
+  - name: customer_response_flag
+    generator: weighted_choice
+    values:
+      'yes': 0.4
+      'no': 0.6
+  - name: internal_only
+    generator: weighted_choice
+    values:
+      'yes': 0.3
+      'no': 0.7
+  - name: attachment_flag
+    generator: weighted_choice
+    values:
+      'yes': 0.15
+      'no': 0.85
+  - name: region
+    generator: choice
+    values:
+    - North
+    - South
+    - East
+    - West
+    - Central
+  - name: shift
+    generator: choice
+    values:
+    - morning
+    - evening
+    - night
+  - name: automated_flag
+    generator: weighted_choice
+    values:
+      'yes': 0.2
+      'no': 0.8
+  - name: tone_flag
+    generator: choice
+    values:
+    - neutral
+    - positive
+    - negative
+  - name: follow_up_required
+    generator: weighted_choice
+    values:
+      'yes': 0.25
+      'no': 0.75
+  - name: quality_score
+    generator: uniform
+    min: 1
+    max: 10
+  - name: template_used
+    generator: weighted_choice
+    values:
+      'yes': 0.5
+      'no': 0.5
+  - name: resolution_confidence
+    generator: uniform
+    min: 0
+    max: 1
+  - name: created_at
+    generator: date_range
+    start: '2023-01-01'
+    end: '2026-08-01'
