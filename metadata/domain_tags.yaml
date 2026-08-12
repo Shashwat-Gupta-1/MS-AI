@@ -1,0 +1,201 @@
+tables:
+- dataset: base
+  system_name: Base Entities
+  table: branches
+  domain_tags:
+  - ops
+  table_description: Physical branch locations the NBFC operates from — the geographic anchor for employees,
+    loans, and campaigns.
+- dataset: base
+  system_name: Base Entities
+  table: employees
+  domain_tags:
+  - hr
+  - ops
+  table_description: All staff across every role (loan officers, collections agents, branch managers,
+    sales reps, KYC officers), each attached to a home branch.
+- dataset: base
+  system_name: Base Entities
+  table: customers
+  domain_tags:
+  - kyc
+  - ops
+  table_description: Master record for every borrower — one row per real person, referenced by nearly
+    every other table in the schema.
+- dataset: base
+  system_name: Base Entities
+  table: loan_products
+  domain_tags:
+  - loan
+  - ops
+  table_description: The catalog of loan types the NBFC offers (gold, personal, vehicle, business, microfinance)
+    and their amount bands.
+- dataset: los
+  system_name: LOS
+  table: loan_applications
+  domain_tags:
+  - loan
+  table_description: Every loan application submitted, whether it was later approved, rejected, or is
+    still pending — the entry point into the lending funnel.
+- dataset: los
+  system_name: LOS
+  table: kyc_documents
+  domain_tags:
+  - kyc
+  table_description: Identity documents submitted per customer (PAN, Aadhaar, Passport, Voter ID) and
+    their verification status.
+- dataset: los
+  system_name: LOS
+  table: customer_risk_scores
+  domain_tags:
+  - loan
+  - risk
+  table_description: Credit risk scoring snapshots per customer, used at underwriting time to inform the
+    approval decision.
+- dataset: lms
+  system_name: LMS
+  table: loans
+  domain_tags:
+  - loan
+  table_description: Disbursed loans only — the subset of approved applications that actually converted
+    into live loan accounts.
+- dataset: lms
+  system_name: LMS
+  table: emi_schedule
+  domain_tags:
+  - loan
+  table_description: The full reducing-balance amortization schedule, one row per EMI installment per
+    loan — the ground truth for what's owed and when.
+- dataset: lms
+  system_name: LMS
+  table: payments
+  domain_tags:
+  - loan
+  table_description: EMIs that have actually been paid, with realistic on-time/late/missed timing derived
+    from each loan's status.
+- dataset: lms
+  system_name: LMS
+  table: overdue_accounts
+  domain_tags:
+  - collections
+  - loan
+  table_description: One row per loan currently overdue, aggregating unpaid EMIs past their due date into
+    a days-past-due (DPD) bucket.
+- dataset: lms
+  system_name: LMS
+  table: collections_activity
+  domain_tags:
+  - collections
+  table_description: Recovery actions taken against overdue loans — calls, field visits, legal notices
+    — and their outcomes.
+- dataset: incentive
+  system_name: Incentive Engine
+  table: incentive_payouts
+  domain_tags:
+  - incentive
+  - hr
+  - loan
+  table_description: Monthly incentive/bonus payouts to loan officers, tied to loan sourcing, collections,
+    cross-sell, or retention performance.
+- dataset: zoho
+  system_name: Zoho People
+  table: zoho_employee_records
+  domain_tags:
+  - hr
+  table_description: HR master data synced from Zoho People — designation, department, joining date, and
+    performance rating per employee.
+- dataset: crm
+  system_name: CRM
+  table: campaigns
+  domain_tags:
+  - marketing
+  - leads
+  table_description: Marketing campaigns run to generate loan leads — budget, channel, targeting, and
+    performance-to-target at the campaign level.
+- dataset: crm
+  system_name: CRM
+  table: leads
+  domain_tags:
+  - leads
+  - sales
+  table_description: Prospective customers captured through a campaign or other channel, before (or instead
+    of) converting into an actual borrower.
+- dataset: crm
+  system_name: CRM
+  table: lead_activities
+  domain_tags:
+  - leads
+  - sales
+  table_description: Every individual touchpoint (call, SMS, email, branch visit) a sales rep has with
+    a lead, and its outcome.
+- dataset: crm
+  system_name: CRM
+  table: campaign_responses
+  domain_tags:
+  - marketing
+  - leads
+  table_description: Discrete response events to a campaign (a click, a form submit, a branch walk-in)
+    tied back to both the campaign and the lead who responded.
+- dataset: treasury
+  system_name: Treasury
+  table: funding_sources
+  domain_tags:
+  - treasury
+  - finance
+  table_description: The NBFC's own borrowing facilities (bank term loans, NCDs, securitization, etc.)
+    that fund the loans it disburses to customers.
+- dataset: treasury
+  system_name: Treasury
+  table: treasury_transactions
+  domain_tags:
+  - treasury
+  - finance
+  table_description: Cash flow events against a funding source — drawdowns, interest payments, principal
+    repayments, fees.
+- dataset: insurance
+  system_name: Insurance
+  table: insurance_policies
+  domain_tags:
+  - insurance
+  - cross_sell
+  table_description: Loan-linked insurance policies sold as cross-sell (credit life, asset cover, health
+    riders) at or after loan disbursement.
+- dataset: insurance
+  system_name: Insurance
+  table: insurance_claims
+  domain_tags:
+  - insurance
+  table_description: Claims filed against an insurance policy, their investigation status, and settlement
+    outcome.
+- dataset: compliance
+  system_name: Compliance
+  table: audit_logs
+  domain_tags:
+  - compliance
+  - audit
+  table_description: System-wide action-level audit trail — every create/update/delete/view performed
+    by an employee, across every source system.
+- dataset: compliance
+  system_name: Compliance
+  table: compliance_flags
+  domain_tags:
+  - compliance
+  - risk
+  table_description: Named regulatory/compliance concerns raised against a customer or loan (AML watchlist,
+    PEP check, KYC mismatch, etc.) and their resolution.
+- dataset: support
+  system_name: Customer Support
+  table: support_tickets
+  domain_tags:
+  - support
+  - customer_service
+  table_description: Customer service tickets raised through any channel, categorized by issue type and
+    tracked through to resolution.
+- dataset: support
+  system_name: Customer Support
+  table: ticket_interactions
+  domain_tags:
+  - support
+  - customer_service
+  table_description: Every individual interaction (note, call, email, status change) logged against a
+    support ticket during its lifecycle.

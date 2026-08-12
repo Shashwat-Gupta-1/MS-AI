@@ -1,0 +1,10 @@
+{"role_name": "hr_officer", "description": "HR staff managing employee records and performance data", "allowed_domains": ["hr", "ops"], "is_wildcard": false}
+{"role_name": "loan_officer", "description": "Originates and manages loans day-to-day", "allowed_domains": ["loan", "kyc", "risk", "ops", "incentive"], "is_wildcard": false}
+{"role_name": "collections_agent", "description": "Works overdue accounts and recovery activity", "allowed_domains": ["collections", "loan", "ops"], "is_wildcard": false}
+{"role_name": "sales_rep", "description": "Works leads through to conversion", "allowed_domains": ["leads", "sales", "marketing", "ops"], "is_wildcard": false}
+{"role_name": "branch_manager", "description": "Oversees a branch across lending, collections, and staff", "allowed_domains": ["loan", "collections", "kyc", "risk", "hr", "incentive", "ops"], "is_wildcard": false}
+{"role_name": "compliance_officer", "description": "Regulatory, audit, and risk oversight", "allowed_domains": ["compliance", "audit", "risk", "kyc", "loan"], "is_wildcard": false}
+{"role_name": "treasury_manager", "description": "Manages the NBFC's own funding and cash flow", "allowed_domains": ["treasury", "finance"], "is_wildcard": false}
+{"role_name": "insurance_ops", "description": "Manages cross-sell insurance policies and claims", "allowed_domains": ["insurance", "cross_sell", "loan"], "is_wildcard": false}
+{"role_name": "support_agent", "description": "Handles customer service tickets", "allowed_domains": ["support", "customer_service", "loan", "kyc"], "is_wildcard": false}
+{"role_name": "executive", "description": "Full visibility across the entire business \u2014 leadership, strategy, and cross-functional reporting roles", "allowed_domains": [], "is_wildcard": true}

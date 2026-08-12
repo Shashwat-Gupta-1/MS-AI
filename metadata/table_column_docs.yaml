@@ -1,0 +1,965 @@
+tables:
+- dataset: base
+  system_name: Base Entities
+  table: branches
+  table_description: Physical branch locations the NBFC operates from — the geographic anchor for employees,
+    loans, and campaigns.
+  columns:
+  - column: branch_id
+    description: Primary key — uniquely identifies each row in this table.
+  - column: branch_name
+    description: Display name of the branch, typically the city it's located in plus 'Branch'.
+  - column: region
+    description: 'Broad geographic region (North/South/East/West/Central) the record is associated with.
+      One of: North, South, East, West, Central.'
+  - column: state
+    description: 'Indian state associated with the record. One of: Rajasthan, Maharashtra, Delhi, Karnataka,
+      Gujarat, Tamil Nadu, Uttar Pradesh, West Bengal.'
+- dataset: base
+  system_name: Base Entities
+  table: employees
+  table_description: All staff across every role (loan officers, collections agents, branch managers,
+    sales reps, KYC officers), each attached to a home branch.
+  columns:
+  - column: employee_id
+    description: Primary key — uniquely identifies each row in this table.
+  - column: name
+    description: Full name of the person this record represents.
+  - column: role
+    description: 'Job function — loan_officer, collections_agent, branch_manager, sales_rep, or kyc_officer.
+      One of: loan_officer, collections_agent, branch_manager, sales_rep, kyc_officer.'
+  - column: branch_id
+    description: Foreign key to `branches` — the branch this record is associated with. Foreign key into
+      `branches`.
+  - column: joined_date
+    description: Date the employee joined the NBFC. Date, ranging 2019-01-01 to 2026-06-01.
+- dataset: base
+  system_name: Base Entities
+  table: customers
+  table_description: Master record for every borrower — one row per real person, referenced by nearly
+    every other table in the schema.
+  columns:
+  - column: customer_id
+    description: Primary key — uniquely identifies each row in this table.
+  - column: name
+    description: Full name of the person this record represents.
+  - column: dob
+    description: Customer's date of birth. Date, ranging 1960-01-01 to 2005-01-01.
+  - column: pan_number
+    description: Permanent Account Number — India's tax ID, used as a unique identity check.
+  - column: phone
+    description: Contact phone number, in local (non-formatted) digits.
+  - column: city
+    description: City associated with the record.
+  - column: state
+    description: 'Indian state associated with the record. One of: Rajasthan, Maharashtra, Delhi, Karnataka,
+      Gujarat, Tamil Nadu, Uttar Pradesh, West Bengal.'
+  - column: occupation
+    description: 'Customer''s stated occupation category, used in credit assessment. One of: salaried,
+      self_employed, business_owner, farmer.'
+  - column: income_band
+    description: 'Customer''s self-declared annual income bracket. One of: 0-3L, 3-6L, 6-12L, 12L+.'
+  - column: created_at
+    description: Timestamp when this record was first created in the source system. Date, ranging 2020-01-01
+      to 2026-08-01.
+- dataset: base
+  system_name: Base Entities
+  table: loan_products
+  table_description: The catalog of loan types the NBFC offers (gold, personal, vehicle, business, microfinance)
+    and their amount bands.
+  columns:
+  - column: product_id
+    description: Primary key — uniquely identifies each row in this table.
+  - column: loan_type
+    description: 'The kind of loan this product represents (gold, personal, vehicle, business, microfinance).
+      One of: gold, personal, vehicle, business, microfinance.'
+  - column: min_amount
+    description: Minimum loan amount allowed under this product. Numeric, uniformly ranging 10000–20000.
+  - column: max_amount
+    description: Maximum loan amount allowed under this product. Numeric, uniformly ranging 500000–2000000.
+- dataset: los
+  system_name: LOS
+  table: loan_applications
+  table_description: Every loan application submitted, whether it was later approved, rejected, or is
+    still pending — the entry point into the lending funnel.
+  columns:
+  - column: application_id
+    description: Primary key — uniquely identifies each row in this table.
+  - column: customer_id
+    description: Foreign key to `customers` — the borrower this record belongs to. Foreign key into `customers`.
+  - column: product_id
+    description: Foreign key to `loan_products` — the loan product involved. Foreign key into `loan_products`.
+  - column: branch_id
+    description: Foreign key to `branches` — the branch this record is associated with. Foreign key into
+      `branches`.
+  - column: requested_amount
+    description: Amount the customer requested at time of application. Numeric, roughly centered around
+      250000 (stddev 90000), bounded [15000, -].
+  - column: application_date
+    description: Date the application was submitted. Date, ranging 2023-01-01 to 2026-08-01.
+  - column: status
+    description: 'Current lifecycle status of this record — see the table''s status values for the specific
+      set used here. One of: approved, rejected, pending.'
+  - column: rejection_reason
+    description: 'Reason the application was rejected; null unless status is ''rejected''. One of: low_credit_score,
+      income_mismatch, incomplete_kyc, high_existing_debt (null unless status != rejected).'
+- dataset: los
+  system_name: LOS
+  table: kyc_documents
+  table_description: Identity documents submitted per customer (PAN, Aadhaar, Passport, Voter ID) and
+    their verification status.
+  columns:
+  - column: kyc_id
+    description: Primary key — uniquely identifies each row in this table.
+  - column: customer_id
+    description: Foreign key to `customers` — the borrower this record belongs to. Foreign key into `customers`.
+  - column: doc_type
+    description: 'Type of identity document submitted. One of: PAN, Aadhaar, Passport, Voter_ID.'
+  - column: verification_status
+    description: 'Whether the document has been verified, is pending, or was rejected. One of: verified,
+      pending, rejected.'
+  - column: verified_at
+    description: Date the document verification was completed. Date, ranging 2020-01-01 to 2026-08-01.
+- dataset: los
+  system_name: LOS
+  table: customer_risk_scores
+  table_description: Credit risk scoring snapshots per customer, used at underwriting time to inform the
+    approval decision.
+  columns:
+  - column: score_id
+    description: Primary key — uniquely identifies each row in this table.
+  - column: customer_id
+    description: Foreign key to `customers` — the borrower this record belongs to. Foreign key into `customers`.
+  - column: credit_score
+    description: Numeric credit score at time of assessment (roughly 300-900 scale). Numeric, roughly
+      centered around 680 (stddev 90), bounded [300, 900].
+  - column: risk_category
+    description: 'Bucketed risk tier derived from the credit score — low, medium, or high. One of: low,
+      medium, high.'
+  - column: scored_at
+    description: Date this risk score was calculated. Date, ranging 2023-01-01 to 2026-08-01.
+- dataset: lms
+  system_name: LMS
+  table: loans
+  table_description: Disbursed loans only — the subset of approved applications that actually converted
+    into live loan accounts.
+  columns:
+  - column: loan_id
+    description: Primary key — uniquely identifies each row in this table.
+  - column: application_id
+    description: Foreign key to `loan_applications` — the originating application. Foreign key into `loan_applications`
+      (restricted to status=approved).
+  - column: customer_id
+    description: Foreign key to `customers` — the borrower this record belongs to. Foreign key into `customers`
+      — value is carried through from `loan_applications` at generation time via `application_id`, not
+      sampled independently, so it always stays consistent with it.
+  - column: product_id
+    description: Foreign key to `loan_products` — the loan product involved. Foreign key into `loan_products`
+      — value is carried through from `loan_applications` at generation time via `application_id`, not
+      sampled independently, so it always stays consistent with it.
+  - column: branch_id
+    description: Foreign key to `branches` — the branch this record is associated with. Foreign key into
+      `branches` — value is carried through from `loan_applications` at generation time via `application_id`,
+      not sampled independently, so it always stays consistent with it.
+  - column: disbursed_amount
+    description: Actual principal amount disbursed to the customer. Numeric, roughly centered around 240000
+      (stddev 85000), bounded [15000, -].
+  - column: interest_rate
+    description: Annual interest rate applied to this loan, in percent. Numeric, uniformly ranging 8–24.
+  - column: tenure_months
+    description: 'Loan tenure in months, used to compute the amortization schedule. One of: 12, 24, 36,
+      48, 60.'
+  - column: disbursement_date
+    description: Date the loan amount was disbursed to the customer. Date, ranging 2023-01-15 to 2026-07-01.
+  - column: status
+    description: 'Current loan status — active, closed, npa (non-performing), or written_off. One of:
+      active, closed, npa, written_off.'
+- dataset: lms
+  system_name: LMS
+  table: emi_schedule
+  table_description: The full reducing-balance amortization schedule, one row per EMI installment per
+    loan — the ground truth for what's owed and when.
+  columns: []
+- dataset: lms
+  system_name: LMS
+  table: payments
+  table_description: EMIs that have actually been paid, with realistic on-time/late/missed timing derived
+    from each loan's status.
+  columns: []
+- dataset: lms
+  system_name: LMS
+  table: overdue_accounts
+  table_description: One row per loan currently overdue, aggregating unpaid EMIs past their due date into
+    a days-past-due (DPD) bucket.
+  columns: []
+- dataset: lms
+  system_name: LMS
+  table: collections_activity
+  table_description: Recovery actions taken against overdue loans — calls, field visits, legal notices
+    — and their outcomes.
+  columns:
+  - column: activity_id
+    description: Unique identifier (primary key) for this row.
+  - column: loan_id
+    description: Foreign key to `loans` — the disbursed loan this record relates to. Foreign key into
+      `overdue_accounts`.
+  - column: employee_id
+    description: Foreign key to `employees` — the staff member associated with this record. Foreign key
+      into `employees` (restricted to role=collections_agent).
+  - column: activity_type
+    description: 'Type of recovery action taken — call, field visit, legal notice, or SMS reminder. One
+      of: call, field_visit, legal_notice, sms_reminder.'
+  - column: activity_date
+    description: Date the collections activity took place. Date, ranging 2024-01-01 to 2026-08-01.
+  - column: outcome
+    description: 'Result of the collections activity — promised to pay, no response, paid, or disputed.
+      One of: promised_to_pay, no_response, paid, disputed.'
+- dataset: incentive
+  system_name: Incentive Engine
+  table: incentive_payouts
+  table_description: Monthly incentive/bonus payouts to loan officers, tied to loan sourcing, collections,
+    cross-sell, or retention performance.
+  columns:
+  - column: incentive_id
+    description: Primary key — uniquely identifies each row in this table.
+  - column: employee_id
+    description: Foreign key to `employees` — the staff member associated with this record. Foreign key
+      into `employees` (restricted to role=loan_officer).
+  - column: loan_id
+    description: Foreign key to `loans` — the disbursed loan this record relates to. Foreign key into
+      `loans`.
+  - column: incentive_type
+    description: 'Category of incentive being paid — loan sourcing, collections bonus, cross-sell, or
+      retention. One of: loan_sourcing, collections_bonus, cross_sell, retention.'
+  - column: period_month
+    description: The month this incentive payout covers. Date, ranging 2024-01-01 to 2026-07-01.
+  - column: base_amount
+    description: Fixed base incentive amount before bonuses or deductions. Numeric, roughly centered around
+      8000 (stddev 2500), bounded [500, -].
+  - column: bonus_amount
+    description: Variable bonus added on top of the base incentive. Numeric, uniformly ranging 0–6000.
+  - column: deduction_amount
+    description: Amount deducted from the incentive, e.g. for policy violations or clawbacks. Numeric,
+      uniformly ranging 0–1500.
+  - column: payout_status
+    description: 'Whether the incentive has been paid, is pending, or is on hold. One of: paid, pending,
+      hold.'
+  - column: payout_date
+    description: Date the incentive was (or is scheduled to be) paid out. Date, ranging 2024-01-05 to
+      2026-08-01.
+- dataset: zoho
+  system_name: Zoho People
+  table: zoho_employee_records
+  table_description: HR master data synced from Zoho People — designation, department, joining date, and
+    performance rating per employee.
+  columns:
+  - column: zoho_record_id
+    description: Primary key — uniquely identifies each row in this table.
+  - column: employee_id
+    description: Foreign key to `employees` — the staff member associated with this record. Foreign key
+      into `employees`.
+  - column: designation
+    description: 'Job title/level in the HR system, distinct from the operational `role` field in `employees`.
+      One of: associate, senior_associate, team_lead, assistant_manager, manager.'
+  - column: department
+    description: 'HR department the employee is assigned to. One of: sales, collections, operations, credit,
+      hr.'
+  - column: date_of_joining
+    description: Joining date as recorded in Zoho (should align with `employees.joined_date`). Date, ranging
+      2019-01-01 to 2026-06-01.
+  - column: employment_type
+    description: 'Full-time, contract, or intern. One of: full_time, contract, intern.'
+  - column: reporting_manager
+    description: Name of the employee's manager, as recorded in Zoho.
+  - column: work_location
+    description: City the employee is based out of for HR purposes.
+  - column: leave_balance_days
+    description: Number of paid leave days remaining for the employee. Numeric, uniformly ranging 0–30.
+  - column: performance_rating
+    description: 'Latest performance rating on a 1-5 scale (stored as text). One of: 1, 2, 3, 4, 5.'
+- dataset: crm
+  system_name: CRM
+  table: campaigns
+  table_description: Marketing campaigns run to generate loan leads — budget, channel, targeting, and
+    performance-to-target at the campaign level.
+  columns:
+  - column: campaign_id
+    description: Primary key — uniquely identifies each row in this table.
+  - column: campaign_name
+    description: 'Human-readable name of the marketing campaign. One of: Diwali Gold Loan Push, Monsoon
+      Personal Loan, Vehicle Loan Blitz, SME Growth Drive, Digital First-Time Borrower, Referral Rewards,
+      New Year Cashback, Farm Credit Outreach.'
+  - column: channel
+    description: 'Primary channel the campaign runs through — digital, referral, branch walk-in, or telecalling.
+      One of: digital, referral, branch_walkin, telecalling.'
+  - column: campaign_type
+    description: 'Strategic purpose of the campaign — awareness, acquisition, retention, or cross-sell.
+      One of: awareness, acquisition, retention, cross_sell.'
+  - column: product_id
+    description: Foreign key to `loan_products` — the loan product involved. Foreign key into `loan_products`.
+  - column: target_region
+    description: 'Region the campaign is targeted at. One of: North, South, East, West, Central.'
+  - column: target_state
+    description: 'State the campaign is targeted at. One of: Rajasthan, Maharashtra, Delhi, Karnataka,
+      Gujarat, Tamil Nadu, Uttar Pradesh, West Bengal.'
+  - column: start_date
+    description: Date the campaign begins. Date, ranging 2023-01-01 to 2026-06-01.
+  - column: end_date
+    description: Date the campaign ends (or is scheduled to end). Date, ranging 2023-02-01 to 2026-08-01.
+  - column: budget_allocated
+    description: Total budget approved for the campaign. Numeric, roughly centered around 500000 (stddev
+      150000), bounded [20000, -].
+  - column: budget_spent
+    description: Actual spend to date against the allocated budget. Numeric, roughly centered around 420000
+      (stddev 140000), bounded [0, -].
+  - column: leads_target
+    description: Number of leads the campaign is targeted to generate. Numeric, uniformly ranging 200–5000.
+  - column: impressions
+    description: Total ad/content impressions generated by the campaign. Numeric, uniformly ranging 10000–2000000.
+  - column: clicks
+    description: Total clicks generated by the campaign. Numeric, uniformly ranging 500–100000.
+  - column: conversion_rate_target
+    description: Target conversion rate (%) the campaign is expected to hit. Numeric, uniformly ranging
+      1–15.
+  - column: cost_per_lead
+    description: Average cost incurred per lead generated. Numeric, roughly centered around 150 (stddev
+      60), bounded [10, -].
+  - column: campaign_manager_id
+    description: Foreign key to `employees` (sales_rep) — the person managing this campaign. Foreign key
+      into `employees` (restricted to role=sales_rep).
+  - column: status
+    description: 'Current lifecycle status of this record — see the table''s status values for the specific
+      set used here. One of: active, completed, paused.'
+  - column: priority
+    description: 'Relative priority/urgency assigned to this record. One of: high, medium, low.'
+  - column: created_at
+    description: Timestamp when this record was first created in the source system. Date, ranging 2023-01-01
+      to 2026-06-01.
+- dataset: crm
+  system_name: CRM
+  table: leads
+  table_description: Prospective customers captured through a campaign or other channel, before (or instead
+    of) converting into an actual borrower.
+  columns:
+  - column: lead_id
+    description: Primary key — uniquely identifies each row in this table.
+  - column: campaign_id
+    description: Foreign key to `campaigns` — the marketing campaign this record is tied to. Foreign key
+      into `campaigns`.
+  - column: lead_name
+    description: Name of the prospective customer.
+  - column: phone
+    description: Contact phone number, in local (non-formatted) digits.
+  - column: city
+    description: City associated with the record.
+  - column: state
+    description: 'Indian state associated with the record. One of: Rajasthan, Maharashtra, Delhi, Karnataka,
+      Gujarat, Tamil Nadu, Uttar Pradesh, West Bengal.'
+  - column: source_channel
+    description: 'Channel the lead originated from — digital, referral, branch walk-in, or telecalling.
+      One of: digital, referral, branch_walkin, telecalling.'
+  - column: product_id
+    description: Foreign key to `loan_products` — the loan product involved. Foreign key into `loan_products`.
+  - column: requested_amount_interest
+    description: Approximate loan amount the lead has expressed interest in. Numeric, roughly centered
+      around 220000 (stddev 90000), bounded [10000, -].
+  - column: lead_score
+    description: Numeric score (0-100) indicating how promising this lead is, used for prioritization.
+      Numeric, uniformly ranging 0–100.
+  - column: status
+    description: 'Current lifecycle status of this record — see the table''s status values for the specific
+      set used here. One of: new, contacted, qualified, converted, dropped.'
+  - column: assigned_employee_id
+    description: Foreign key to `employees` (sales_rep) — who is working this lead. Foreign key into `employees`
+      (restricted to role=sales_rep).
+  - column: created_at
+    description: Timestamp when this record was first created in the source system. Date, ranging 2023-01-01
+      to 2026-08-01.
+  - column: last_contacted_at
+    description: Date of the most recent contact attempt with this lead. Date, ranging 2023-01-02 to 2026-08-01.
+  - column: follow_up_count
+    description: Number of follow-up attempts made with this lead so far. Numeric, uniformly ranging 0–12.
+  - column: conversion_probability
+    description: Modeled probability (0-1) that this lead converts into a customer. Numeric, uniformly
+      ranging 0–1.
+  - column: age_band
+    description: 'Age bracket of the lead. One of: 18-25, 26-35, 36-45, 46-60, 60+.'
+  - column: occupation
+    description: 'Lead''s stated occupation category. One of: salaried, self_employed, business_owner,
+      farmer.'
+  - column: income_band
+    description: 'Lead''s self-declared income bracket. One of: 0-3L, 3-6L, 6-12L, 12L+.'
+  - column: is_existing_customer
+    description: 'Whether this ''lead'' is actually an existing customer being cross-sold to. One of:
+      yes, no.'
+- dataset: crm
+  system_name: CRM
+  table: lead_activities
+  table_description: Every individual touchpoint (call, SMS, email, branch visit) a sales rep has with
+    a lead, and its outcome.
+  columns:
+  - column: activity_id
+    description: Primary key — uniquely identifies each row in this table.
+  - column: lead_id
+    description: Foreign key to `leads` — the prospective customer this record relates to. Foreign key
+      into `leads`.
+  - column: employee_id
+    description: Foreign key to `employees` — the staff member associated with this record. Foreign key
+      into `employees` (restricted to role=sales_rep).
+  - column: activity_type
+    description: 'Type of touchpoint — call, SMS, email, WhatsApp, or branch visit. One of: call, sms,
+      email, whatsapp, branch_visit.'
+  - column: activity_date
+    description: Date the activity took place. Date, ranging 2023-01-01 to 2026-08-01.
+  - column: outcome
+    description: 'Result of the activity — interested, not interested, callback requested, no answer,
+      or converted. One of: interested, not_interested, callback_requested, no_answer, converted.'
+  - column: duration_minutes
+    description: Length of the interaction, in minutes. Numeric, uniformly ranging 1–45.
+  - column: channel_cost
+    description: Cost incurred to carry out this specific activity. Numeric, roughly centered around 20
+      (stddev 8), bounded [0, -].
+  - column: sentiment_score
+    description: Sentiment of the interaction, from -1 (negative) to 1 (positive). Numeric, uniformly
+      ranging -1–1.
+  - column: follow_up_scheduled
+    description: 'Whether a follow-up has been scheduled as a result of this activity. One of: yes, no.'
+  - column: priority
+    description: 'Relative priority/urgency assigned to this record. One of: high, medium, low.'
+  - column: region
+    description: 'Broad geographic region (North/South/East/West/Central) the record is associated with.
+      One of: North, South, East, West, Central.'
+  - column: device_type
+    description: 'Device the lead used, if the activity was digital. One of: mobile, desktop, tablet,
+      in_person.'
+  - column: agent_notes_flag
+    description: 'Categorical value for agent notes flag. One of: yes, no.'
+  - column: time_of_day
+    description: 'Part of day the activity occurred. One of: morning, afternoon, evening, night.'
+  - column: day_of_week_type
+    description: 'Whether the activity happened on a weekday or weekend. One of: weekday, weekend.'
+  - column: attempt_number
+    description: Which numbered contact attempt this is for this lead. Numeric, uniformly ranging 1–8.
+  - column: resulted_in_lead_status_change
+    description: 'Whether this activity caused the lead''s status field to change. One of: yes, no.'
+  - column: escalated
+    description: 'Whether this activity was escalated to a supervisor. One of: yes, no.'
+  - column: created_at
+    description: Timestamp when this record was first created in the source system. Date, ranging 2023-01-01
+      to 2026-08-01.
+- dataset: crm
+  system_name: CRM
+  table: campaign_responses
+  table_description: Discrete response events to a campaign (a click, a form submit, a branch walk-in)
+    tied back to both the campaign and the lead who responded.
+  columns:
+  - column: response_id
+    description: Primary key — uniquely identifies each row in this table.
+  - column: campaign_id
+    description: Foreign key to `campaigns` — the marketing campaign this record is tied to. Foreign key
+      into `campaigns`.
+  - column: lead_id
+    description: Foreign key to `leads` — the prospective customer this record relates to. Foreign key
+      into `leads`.
+  - column: response_channel
+    description: 'How the lead responded — SMS link, email click, callback, form submit, or branch visit.
+      One of: sms_link, email_click, call_back, form_submit, branch_visit.'
+  - column: response_date
+    description: Date of the response event. Date, ranging 2023-01-01 to 2026-08-01.
+  - column: engagement_score
+    description: Numeric measure (0-100) of how engaged the response was. Numeric, uniformly ranging 0–100.
+  - column: clicked
+    description: 'Whether the lead clicked through on the campaign content. One of: yes, no.'
+  - column: converted
+    description: 'Whether this specific response ultimately led to a conversion. One of: yes, no.'
+  - column: device_type
+    description: 'Device used to respond to the campaign. One of: mobile, desktop, tablet.'
+  - column: region
+    description: 'Broad geographic region (North/South/East/West/Central) the record is associated with.
+      One of: North, South, East, West, Central.'
+  - column: time_to_respond_hours
+    description: Hours elapsed between the campaign touch and the lead's response. Numeric, uniformly
+      ranging 0–240.
+  - column: bounce_flag
+    description: 'Whether the response bounced immediately (e.g. landing page exit with no engagement).
+      One of: yes, no.'
+  - column: form_completion_pct
+    description: Percentage of a lead-capture form the respondent completed. Numeric, uniformly ranging
+      0–100.
+  - column: ab_test_variant
+    description: 'Which A/B test variant (A, B, or control) this response belongs to. One of: A, B, control.'
+  - column: cost_attributed
+    description: Marketing cost attributed to this individual response. Numeric, roughly centered around
+      80 (stddev 30), bounded [0, -].
+  - column: referral_source
+    description: 'Traffic source the response is attributed to. One of: organic, paid_search, social,
+      sms, email, field_agent.'
+  - column: utm_source_flag
+    description: 'Whether the response carried UTM tracking parameters. One of: yes, no.'
+  - column: session_duration_seconds
+    description: Length of the digital session associated with the response. Numeric, uniformly ranging
+      5–1800.
+  - column: repeat_response
+    description: 'Whether this lead has responded to a campaign before. One of: yes, no.'
+  - column: created_at
+    description: Timestamp when this record was first created in the source system. Date, ranging 2023-01-01
+      to 2026-08-01.
+- dataset: treasury
+  system_name: Treasury
+  table: funding_sources
+  table_description: The NBFC's own borrowing facilities (bank term loans, NCDs, securitization, etc.)
+    that fund the loans it disburses to customers.
+  columns:
+  - column: funding_source_id
+    description: Primary key — uniquely identifies each row in this table.
+  - column: source_name
+    description: 'Name/label of the specific borrowing facility. One of: Bank Term Loan, NCD Issuance,
+      Commercial Paper, ECB, Securitization, Equity Infusion, Subordinated Debt, Bank Cash Credit.'
+  - column: source_type
+    description: 'Category of funding — bank loan, market borrowing, securitization, or equity. One of:
+      bank_loan, market_borrowing, securitization, equity.'
+  - column: lender_name
+    description: Name of the bank or institution providing this facility.
+  - column: sanctioned_amount
+    description: Total amount sanctioned under this facility. Numeric, roughly centered around 50000000
+      (stddev 20000000), bounded [1000000, -].
+  - column: drawn_amount
+    description: Amount actually drawn down so far against the sanctioned limit. Numeric, roughly centered
+      around 40000000 (stddev 18000000), bounded [0, -].
+  - column: interest_rate
+    description: Interest rate the NBFC pays on this borrowing, in percent. Numeric, uniformly ranging
+      6–13.
+  - column: tenure_years
+    description: Tenure of the facility, in years. Numeric, uniformly ranging 1–10.
+  - column: sanction_date
+    description: Date the facility was sanctioned. Date, ranging 2021-01-01 to 2026-06-01.
+  - column: maturity_date
+    description: Date the facility matures / is due for full repayment. Date, ranging 2026-06-02 to 2033-01-01.
+  - column: region
+    description: 'Broad geographic region (North/South/East/West/Central) the record is associated with.
+      One of: North, South, East, West, Central.'
+  - column: state
+    description: 'Indian state associated with the record. One of: Rajasthan, Maharashtra, Delhi, Karnataka,
+      Gujarat, Tamil Nadu, Uttar Pradesh, West Bengal.'
+  - column: credit_rating
+    description: 'Credit rating associated with this borrowing (or the NBFC''s rating at the time). One
+      of: AAA, AA+, AA, A+, A, BBB+.'
+  - column: collateral_type
+    description: 'What secures this facility, if anything. One of: loan_receivables, fixed_deposit, property,
+      unsecured.'
+  - column: repayment_frequency
+    description: 'How often repayments are due — monthly, quarterly, or bullet (lump sum at maturity).
+      One of: monthly, quarterly, bullet.'
+  - column: status
+    description: 'Current lifecycle status of this record — see the table''s status values for the specific
+      set used here. One of: active, closed, defaulted.'
+  - column: relationship_manager
+    description: Name of the relationship manager on the lender's side.
+  - column: processing_fee
+    description: One-time fee paid to set up this facility. Numeric, roughly centered around 250000 (stddev
+      100000), bounded [0, -].
+  - column: covenant_breach_flag
+    description: 'Whether any loan covenant on this facility has been breached. One of: yes, no.'
+  - column: created_at
+    description: Timestamp when this record was first created in the source system. Date, ranging 2021-01-01
+      to 2026-06-01.
+- dataset: treasury
+  system_name: Treasury
+  table: treasury_transactions
+  table_description: Cash flow events against a funding source — drawdowns, interest payments, principal
+    repayments, fees.
+  columns:
+  - column: transaction_id
+    description: Primary key — uniquely identifies each row in this table.
+  - column: funding_source_id
+    description: Foreign key to `funding_sources` — the borrowing facility this transaction is against.
+      Foreign key into `funding_sources`.
+  - column: transaction_type
+    description: 'Nature of the cash flow — drawdown, interest payment, principal repayment, or fee payment.
+      One of: drawdown, interest_payment, principal_repayment, fee_payment.'
+  - column: transaction_date
+    description: Date the transaction occurred. Date, ranging 2021-01-01 to 2026-08-01.
+  - column: amount
+    description: Transaction amount. Numeric, roughly centered around 1500000 (stddev 800000), bounded
+      [1000, -].
+  - column: currency
+    description: 'Currency of the transaction (INR for all records here). One of: INR.'
+  - column: settlement_mode
+    description: 'How the transaction was settled — RTGS, NEFT, or internal transfer. One of: rtgs, neft,
+      internal_transfer.'
+  - column: approved_by
+    description: Name of the person who approved the transaction.
+  - column: region
+    description: 'Broad geographic region (North/South/East/West/Central) the record is associated with.
+      One of: North, South, East, West, Central.'
+  - column: book_balance_after
+    description: Outstanding book balance on the facility immediately after this transaction. Numeric,
+      roughly centered around 35000000 (stddev 15000000), bounded [0, -].
+  - column: reconciliation_status
+    description: 'Whether the transaction has been reconciled against bank statements. One of: reconciled,
+      pending, flagged.'
+  - column: value_date
+    description: Value date for interest/accounting purposes (may differ from transaction_date). Date,
+      ranging 2021-01-01 to 2026-08-01.
+  - column: counterparty_bank
+    description: Bank on the other side of this transaction.
+  - column: interest_component
+    description: Portion of this transaction that is interest, where applicable. Numeric, roughly centered
+      around 80000 (stddev 40000), bounded [0, -].
+  - column: principal_component
+    description: Portion of this transaction that is principal, where applicable. Numeric, roughly centered
+      around 900000 (stddev 500000), bounded [0, -].
+  - column: is_intercompany
+    description: 'Whether this transaction is between related/group entities. One of: yes, no.'
+  - column: processed_by_system
+    description: 'System of record that processed this transaction. One of: core_treasury, manual_entry,
+      batch_upload.'
+  - column: audit_flag
+    description: 'Whether this transaction has been flagged for audit review. One of: yes, no.'
+  - column: narration_code
+    description: 'Short internal code describing the transaction purpose. One of: DRWDN, INTPMT, PRINRPY,
+      FEEPMT.'
+  - column: created_at
+    description: Timestamp when this record was first created in the source system. Date, ranging 2021-01-01
+      to 2026-08-01.
+- dataset: insurance
+  system_name: Insurance
+  table: insurance_policies
+  table_description: Loan-linked insurance policies sold as cross-sell (credit life, asset cover, health
+    riders) at or after loan disbursement.
+  columns:
+  - column: policy_id
+    description: Primary key — uniquely identifies each row in this table.
+  - column: loan_id
+    description: Foreign key to `loans` — the disbursed loan this record relates to. Foreign key into
+      `loans`.
+  - column: customer_id
+    description: Foreign key to `customers` — the borrower this record belongs to. Foreign key into `customers`
+      — value is carried through from `loans` at generation time via `loan_id`, not sampled independently,
+      so it always stays consistent with it.
+  - column: policy_type
+    description: 'Type of cover — credit life, asset cover, or health rider. One of: credit_life, asset_cover,
+      health_rider.'
+  - column: insurer_name
+    description: Name of the insurance company underwriting the policy.
+  - column: sum_assured
+    description: Total amount the policy pays out on a valid claim. Numeric, roughly centered around 250000
+      (stddev 90000), bounded [10000, -].
+  - column: premium_amount
+    description: Premium amount charged for this policy. Numeric, roughly centered around 3500 (stddev
+      1500), bounded [200, -].
+  - column: premium_frequency
+    description: 'How the premium is paid — single, annual, or monthly. One of: single, annual, monthly.'
+  - column: policy_start_date
+    description: Date the policy coverage begins. Date, ranging 2023-01-01 to 2026-08-01.
+  - column: policy_end_date
+    description: Date the policy coverage ends. Date, ranging 2024-01-01 to 2031-08-01.
+  - column: status
+    description: 'Current lifecycle status of this record — see the table''s status values for the specific
+      set used here. One of: active, lapsed, matured, cancelled.'
+  - column: sold_by_employee_id
+    description: Foreign key to `employees` (loan_officer) — who sold this policy. Foreign key into `employees`
+      (restricted to role=loan_officer).
+  - column: region
+    description: 'Broad geographic region (North/South/East/West/Central) the record is associated with.
+      One of: North, South, East, West, Central.'
+  - column: state
+    description: 'Indian state associated with the record. One of: Rajasthan, Maharashtra, Delhi, Karnataka,
+      Gujarat, Tamil Nadu, Uttar Pradesh, West Bengal.'
+  - column: nominee_relation
+    description: 'Relationship of the policy nominee to the insured customer. One of: spouse, parent,
+      child, sibling.'
+  - column: underwriting_decision
+    description: 'Outcome of underwriting review — accepted, accepted with loaded premium, or declined.
+      One of: accepted, loaded_premium, declined.'
+  - column: commission_amount
+    description: Commission earned by the NBFC/employee for selling this policy. Numeric, roughly centered
+      around 400 (stddev 150), bounded [0, -].
+  - column: renewal_due
+    description: 'Whether this policy is due for renewal. One of: yes, no.'
+  - column: digital_issuance
+    description: 'Whether the policy was issued digitally (vs. paper-based). One of: yes, no.'
+  - column: created_at
+    description: Timestamp when this record was first created in the source system. Date, ranging 2023-01-01
+      to 2026-08-01.
+- dataset: insurance
+  system_name: Insurance
+  table: insurance_claims
+  table_description: Claims filed against an insurance policy, their investigation status, and settlement
+    outcome.
+  columns:
+  - column: claim_id
+    description: Primary key — uniquely identifies each row in this table.
+  - column: policy_id
+    description: Foreign key to `insurance_policies` — the policy this record relates to. Foreign key
+      into `insurance_policies`.
+  - column: claim_type
+    description: 'Nature of the claim — death, disability, critical illness, or asset damage. One of:
+      death, disability, critical_illness, asset_damage.'
+  - column: claim_amount
+    description: Amount claimed by the policyholder/beneficiary. Numeric, roughly centered around 220000
+      (stddev 95000), bounded [5000, -].
+  - column: claim_filed_date
+    description: Date the claim was filed. Date, ranging 2023-06-01 to 2026-08-01.
+  - column: claim_status
+    description: 'Current status of the claim — approved, pending, rejected, or under review. One of:
+      approved, pending, rejected, under_review.'
+  - column: rejection_reason
+    description: 'Reason the claim was rejected; null unless claim_status is ''rejected''. One of: documentation_incomplete,
+      policy_lapsed, exclusion_clause (null unless claim_status != rejected).'
+  - column: settlement_amount
+    description: Amount actually paid out on the claim. Numeric, roughly centered around 190000 (stddev
+      90000), bounded [0, -].
+  - column: settlement_date
+    description: Date the claim was settled. Date, ranging 2023-07-01 to 2026-08-01.
+  - column: processed_by
+    description: Name of the person who processed the claim.
+  - column: region
+    description: 'Broad geographic region (North/South/East/West/Central) the record is associated with.
+      One of: North, South, East, West, Central.'
+  - column: turnaround_days
+    description: Number of days from filing to settlement/rejection. Numeric, uniformly ranging 1–120.
+  - column: documentation_score
+    description: Completeness score (0-100) of the documentation submitted. Numeric, uniformly ranging
+      0–100.
+  - column: investigator_assigned
+    description: 'Whether a claims investigator was assigned to this case. One of: yes, no.'
+  - column: fraud_flag
+    description: 'Whether the claim was flagged as potentially fraudulent. One of: yes, no.'
+  - column: appeal_filed
+    description: 'Whether the claimant filed an appeal against the decision. One of: yes, no.'
+  - column: customer_satisfaction_score
+    description: Customer's satisfaction rating (1-5) with the claims process. Numeric, uniformly ranging
+      1–5.
+  - column: channel_reported
+    description: 'Channel the claim was originally reported through. One of: branch, call_center, app,
+      agent.'
+  - column: payout_mode
+    description: 'How the settlement was paid out — NEFT, cheque, or adjusted against the loan. One of:
+      neft, cheque, loan_adjustment.'
+  - column: created_at
+    description: Timestamp when this record was first created in the source system. Date, ranging 2023-06-01
+      to 2026-08-01.
+- dataset: compliance
+  system_name: Compliance
+  table: audit_logs
+  table_description: System-wide action-level audit trail — every create/update/delete/view performed
+    by an employee, across every source system.
+  columns:
+  - column: audit_id
+    description: Primary key — uniquely identifies each row in this table.
+  - column: entity_type
+    description: 'Type of record the audited action was performed on. One of: loan, customer, employee,
+      branch, kyc_document.'
+  - column: action_type
+    description: 'Nature of the action — create, update, delete, or view. One of: create, update, delete,
+      view.'
+  - column: performed_by_employee_id
+    description: Foreign key to `employees` — who performed the action. Foreign key into `employees`.
+  - column: branch_id
+    description: Foreign key to `branches` — the branch this record is associated with. Foreign key into
+      `branches`.
+  - column: action_timestamp
+    description: When the action occurred. Date, ranging 2023-01-01 to 2026-08-01.
+  - column: ip_region
+    description: 'Region the action was performed from, inferred from IP. One of: North, South, East,
+      West, Central.'
+  - column: severity
+    description: 'Severity classification of the logged action. One of: low, medium, high, critical.'
+  - column: system_source
+    description: 'Which source system the action originated in. One of: LOS, LMS, CRM, Treasury, Insurance,
+      Zoho.'
+  - column: field_changed
+    description: 'Which field was modified, for update actions. One of: status, amount, kyc_status, contact_info,
+      role, none.'
+  - column: old_value_flag
+    description: 'Whether a prior value existed before this change (i.e. it wasn''t a first-time create).
+      One of: yes, no.'
+  - column: session_id
+    description: Identifier for the user session this action was part of. System-generated unique identifier.
+  - column: device_type
+    description: 'Device type the action was performed from. One of: desktop, mobile, api.'
+  - column: approval_required
+    description: 'Whether this action required a secondary approval. One of: yes, no.'
+  - column: approved_flag
+    description: 'Whether the required approval was granted. One of: yes, no.'
+  - column: anomaly_score
+    description: Automated anomaly score (0-1) assigned to this action. Numeric, uniformly ranging 0–1.
+  - column: flagged_for_review
+    description: 'Whether this specific log entry has been flagged for manual review. One of: yes, no.'
+  - column: retention_category
+    description: 'Data retention classification applied to this log entry. One of: standard, legal_hold,
+      regulatory.'
+  - column: log_version
+    description: 'Schema version of the audit log format used to write this entry. One of: v1, v2.'
+  - column: created_at
+    description: Timestamp when this record was first created in the source system. Date, ranging 2023-01-01
+      to 2026-08-01.
+- dataset: compliance
+  system_name: Compliance
+  table: compliance_flags
+  table_description: Named regulatory/compliance concerns raised against a customer or loan (AML watchlist,
+    PEP check, KYC mismatch, etc.) and their resolution.
+  columns:
+  - column: flag_id
+    description: Primary key — uniquely identifies each row in this table.
+  - column: customer_id
+    description: Foreign key to `customers` — the borrower this record belongs to. Foreign key into `customers`.
+  - column: loan_id
+    description: Foreign key to `loans` — the disbursed loan this record relates to. Foreign key into
+      `loans`.
+  - column: flag_type
+    description: 'Nature of the compliance concern — AML watchlist, PEP check, KYC mismatch, high-risk
+      geography, or duplicate PAN. One of: aml_watchlist, pep_check, kyc_mismatch, high_risk_geography,
+      duplicate_pan.'
+  - column: flag_severity
+    description: 'Severity of the flag. One of: low, medium, high, critical.'
+  - column: raised_date
+    description: Date the flag was raised. Date, ranging 2023-01-01 to 2026-08-01.
+  - column: resolved_date
+    description: Date the flag was resolved, if applicable. Date, ranging 2023-01-02 to 2026-08-01.
+  - column: status
+    description: 'Current lifecycle status of this record — see the table''s status values for the specific
+      set used here. One of: open, under_investigation, resolved, escalated.'
+  - column: investigated_by
+    description: Name of the person who investigated the flag.
+  - column: regulatory_body
+    description: 'External regulator the flag relates to, if any (RBI, FIU-IND), or ''internal_audit''/''none''.
+      One of: RBI, FIU-IND, internal_audit, none.'
+  - column: reported_externally
+    description: 'Whether this flag was reported to an external regulator. One of: yes, no.'
+  - column: region
+    description: 'Broad geographic region (North/South/East/West/Central) the record is associated with.
+      One of: North, South, East, West, Central.'
+  - column: state
+    description: 'Indian state associated with the record. One of: Rajasthan, Maharashtra, Delhi, Karnataka,
+      Gujarat, Tamil Nadu, Uttar Pradesh, West Bengal.'
+  - column: resolution_notes_flag
+    description: 'Whether resolution notes exist for this flag. One of: yes, no.'
+  - column: recurrence_count
+    description: Number of times a similar flag has recurred for this customer/loan. Numeric, uniformly
+      ranging 0–5.
+  - column: risk_score_at_flag
+    description: Customer's credit risk score at the time this flag was raised. Numeric, uniformly ranging
+      300–900.
+  - column: branch_id
+    description: Foreign key to `branches` — the branch this record is associated with. Foreign key into
+      `branches`.
+  - column: escalation_level
+    description: 'How far up the organization this flag has been escalated. One of: branch, regional,
+      corporate, board.'
+  - column: sla_breach
+    description: 'Whether resolution of this flag breached its SLA. One of: yes, no.'
+  - column: created_at
+    description: Timestamp when this record was first created in the source system. Date, ranging 2023-01-01
+      to 2026-08-01.
+- dataset: support
+  system_name: Customer Support
+  table: support_tickets
+  table_description: Customer service tickets raised through any channel, categorized by issue type and
+    tracked through to resolution.
+  columns:
+  - column: ticket_id
+    description: Primary key — uniquely identifies each row in this table.
+  - column: customer_id
+    description: Foreign key to `customers` — the borrower this record belongs to. Foreign key into `customers`.
+  - column: loan_id
+    description: Foreign key to `loans` — the disbursed loan this record relates to. Foreign key into
+      `loans`.
+  - column: category
+    description: 'Nature of the support request. One of: payment_issue, statement_request, complaint,
+      kyc_update, closure_request, general_query.'
+  - column: channel
+    description: 'Channel the ticket was raised through. One of: call_center, app, email, branch, whatsapp.'
+  - column: priority
+    description: 'Relative priority/urgency assigned to this record. One of: low, medium, high, urgent.'
+  - column: status
+    description: 'Current lifecycle status of this record — see the table''s status values for the specific
+      set used here. One of: open, in_progress, resolved, closed.'
+  - column: created_at
+    description: Timestamp when this record was first created in the source system. Date, ranging 2023-01-01
+      to 2026-08-01.
+  - column: resolved_at
+    description: Date/time the ticket was resolved. Date, ranging 2023-01-02 to 2026-08-01.
+  - column: assigned_employee_id
+    description: Assigned employee id. Foreign key into `employees`.
+  - column: branch_id
+    description: Foreign key to `branches` — the branch this record is associated with. Foreign key into
+      `branches`.
+  - column: region
+    description: 'Broad geographic region (North/South/East/West/Central) the record is associated with.
+      One of: North, South, East, West, Central.'
+  - column: csat_score
+    description: Customer satisfaction score (1-5) for this ticket. Numeric, uniformly ranging 1–5.
+  - column: reopened_count
+    description: Number of times this ticket was reopened after being marked resolved. Numeric, uniformly
+      ranging 0–4.
+  - column: first_response_minutes
+    description: Minutes elapsed before the first agent response. Numeric, uniformly ranging 1–1440.
+  - column: resolution_hours
+    description: Total hours from creation to resolution. Numeric, uniformly ranging 0.5–240.
+  - column: escalated
+    description: 'Whether the ticket was escalated beyond first-line support. One of: yes, no.'
+  - column: language_preference
+    description: 'Customer''s preferred language for this interaction. One of: English, Hindi, Regional.'
+  - column: sla_breach
+    description: 'Whether this ticket breached its service-level agreement. One of: yes, no.'
+  - column: sentiment
+    description: 'Overall sentiment of the customer''s tone across the ticket. One of: positive, neutral,
+      negative.'
+- dataset: support
+  system_name: Customer Support
+  table: ticket_interactions
+  table_description: Every individual interaction (note, call, email, status change) logged against a
+    support ticket during its lifecycle.
+  columns:
+  - column: interaction_id
+    description: Primary key — uniquely identifies each row in this table.
+  - column: ticket_id
+    description: Foreign key to `support_tickets` — the support ticket this record belongs to. Foreign
+      key into `support_tickets`.
+  - column: employee_id
+    description: Foreign key to `employees` — the staff member associated with this record. Foreign key
+      into `employees`.
+  - column: interaction_type
+    description: 'Nature of this interaction — note, call, email sent, status change, or customer reply.
+      One of: note, call, email_sent, status_change, customer_reply.'
+  - column: interaction_date
+    description: When this interaction occurred. Date, ranging 2023-01-01 to 2026-08-01.
+  - column: channel
+    description: 'Categorical value for channel. One of: call_center, app, email, branch, whatsapp.'
+  - column: duration_minutes
+    description: Length of the interaction, in minutes. Numeric, uniformly ranging 0–60.
+  - column: outcome
+    description: 'Result of this specific interaction. One of: resolved, pending_customer, pending_internal,
+      escalated, no_change.'
+  - column: customer_response_flag
+    description: 'Whether the customer responded as part of this interaction. One of: yes, no.'
+  - column: internal_only
+    description: 'Whether this interaction is internal-only (not visible to the customer). One of: yes,
+      no.'
+  - column: attachment_flag
+    description: 'Whether a file was attached to this interaction. One of: yes, no.'
+  - column: region
+    description: 'Broad geographic region (North/South/East/West/Central) the record is associated with.
+      One of: North, South, East, West, Central.'
+  - column: shift
+    description: 'Support shift (morning/evening/night) this interaction was handled in. One of: morning,
+      evening, night.'
+  - column: automated_flag
+    description: 'Whether this interaction was generated automatically rather than by an agent. One of:
+      yes, no.'
+  - column: tone_flag
+    description: 'Tone classification of this specific interaction. One of: neutral, positive, negative.'
+  - column: follow_up_required
+    description: 'Whether this interaction requires a follow-up. One of: yes, no.'
+  - column: quality_score
+    description: QA quality score (1-10) assigned to this interaction. Numeric, uniformly ranging 1–10.
+  - column: template_used
+    description: 'Whether a canned response template was used. One of: yes, no.'
+  - column: resolution_confidence
+    description: Model/agent confidence (0-1) that this interaction resolves the issue. Numeric, uniformly
+      ranging 0–1.
+  - column: created_at
+    description: Timestamp when this record was first created in the source system. Date, ranging 2023-01-01
+      to 2026-08-01.

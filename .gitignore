@@ -1,3 +1,10 @@
 output/
 /output
 *.csv
+/.env
+.venv/
+/scripts
+/logs
+/SIDE STUFF
+/.agents
+

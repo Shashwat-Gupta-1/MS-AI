@@ -136,8 +136,14 @@ def generate_standard_table(table_cfg, context):
             mask = df[field] != val if op == "!=" else df[field] == val
             df.loc[mask, col["name"]] = None
 
-    return df
+    # Force column order to exactly match the YAML declaration -- same_as_ref
+    # columns get assigned via df[col["name"]] = ... above, which pandas always
+    # appends as the LAST column regardless of declared position, silently
+    # breaking positional bq loads.
+    declared_order = [c["name"] for c in table_cfg["columns"]]
+    df = df[declared_order]
 
+    return df
 
 # ---------------------------------------------------------------------------
 # Amortization logic — the one piece that needs real sequential business math,

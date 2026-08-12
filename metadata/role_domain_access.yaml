@@ -1,0 +1,52 @@
+# Role → Domain Access Mapping
+#
+# Each role gets exactly the domains it needs for its job function.
+# "executive" gets every domain that exists — defined as a wildcard so it
+# never drifts out of sync as new domains get added later.
+#
+# This file is the single source of truth for BOTH:
+#   1. BigQuery authorized-view generation (the real security boundary)
+#   2. Retrieval-time domain filtering (the UX layer that gives a clear
+#      "that's outside your access" message instead of a silent DB error)
+
+roles:
+  hr_officer:
+    description: HR staff managing employee records and performance data
+    allowed_domains: [hr, ops]
+
+  loan_officer:
+    description: Originates and manages loans day-to-day
+    allowed_domains: [loan, kyc, risk, ops, incentive]
+
+  collections_agent:
+    description: Works overdue accounts and recovery activity
+    allowed_domains: [collections, loan, ops]
+
+  sales_rep:
+    description: Works leads through to conversion
+    allowed_domains: [leads, sales, marketing, ops]
+
+  branch_manager:
+    description: Oversees a branch across lending, collections, and staff
+    allowed_domains: [loan, collections, kyc, risk, hr, incentive, ops]
+
+  compliance_officer:
+    description: Regulatory, audit, and risk oversight
+    allowed_domains: [compliance, audit, risk, kyc, loan]
+
+  treasury_manager:
+    description: Manages the NBFC's own funding and cash flow
+    allowed_domains: [treasury, finance]
+
+  insurance_ops:
+    description: Manages cross-sell insurance policies and claims
+    allowed_domains: [insurance, cross_sell, loan]
+
+  support_agent:
+    description: Handles customer service tickets
+    allowed_domains: [support, customer_service, loan, kyc]
+
+  executive:
+    description: Full visibility across the entire business — leadership,
+      strategy, and cross-functional reporting roles
+    allowed_domains: "*"   # wildcard — always resolves to every domain that exists
