@@ -1,4 +1,5 @@
 import os
+import json
 import google.generativeai as genai
 from google.cloud import bigquery
 

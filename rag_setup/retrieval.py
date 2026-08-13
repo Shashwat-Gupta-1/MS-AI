@@ -132,11 +132,7 @@ def retrieve_relevant_tables(
     LEFT JOIN `{PROJECT_ID}.{DATASET}.domain_tags` AS dt
       ON search_results.base.dataset_id = dt.dataset_name AND search_results.base.table_id = dt.table_name
     WHERE
-      EXISTS (
-        SELECT 1 
-        FROM UNNEST(search_results.base.domain_tags) AS dt
-        JOIN UNNEST(@domains) AS query_domain ON dt = query_domain
-      )
+      (ARRAY_LENGTH(@candidate_tables) = 0 OR search_results.base.table_id IN UNNEST(@candidate_tables))
     GROUP BY
       search_results.base.table_id, dt.table_description
     """
@@ -146,9 +142,20 @@ def retrieve_relevant_tables(
     else:
         domains = domain
 
+    # Fetch candidate tables from domain_summaries based on the selected domains
+    candidate_tables = []
+    if domains:
+        domains_list_str = ", ".join([f"'{d}'" for d in domains])
+        domain_query = f"SELECT tables_in_domain FROM `{PROJECT_ID}.rag_meta.domain_summaries` WHERE domain_name IN ({domains_list_str})"
+        try:
+            for row in client.query(domain_query).result():
+                candidate_tables.extend(row.tables_in_domain)
+        except Exception as e:
+            print(f"Warning: Failed to fetch candidate tables from domain_summaries: {e}")
+
     query_params = [
         bigquery.ScalarQueryParameter("question", "STRING", question),
-        bigquery.ArrayQueryParameter("domains", "STRING", domains),
+        bigquery.ArrayQueryParameter("candidate_tables", "STRING", candidate_tables),
     ]
 
     job_config = bigquery.QueryJobConfig(query_parameters=query_params)
