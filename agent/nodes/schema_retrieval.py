@@ -6,6 +6,7 @@ Implements 4-step schema context assembly without flood-fill table over-expansio
 import time
 import json
 import logging
+from pathlib import Path
 from collections import deque
 from typing import Dict, Any, List, Set, Tuple, Optional
 
@@ -205,6 +206,10 @@ def shortest_path_bfs(from_table: str, to_table: str, max_hops: int) -> Tuple[Li
 
         for nbr in adj.get(curr, set()):
             rel = edge_info.get((curr, nbr), {})
+            # 🟢 DYNAMIC RULE: Skip disconnected seed pool edges
+            if rel.get("data_matched") is False:
+                continue
+
             derivation = str(rel.get("derivation", "")).lower()
             edge_weight = 1.5 if "same_as_ref" in derivation else 1.0
             next_cost = curr_cost + edge_weight
@@ -220,6 +225,20 @@ def shortest_path_bfs(from_table: str, to_table: str, max_hops: int) -> Tuple[Li
 
 
 
+# Dynamically load entity fallbacks from YAML metadata
+def load_entity_fallbacks() -> Dict[str, str]:
+    yaml_path = Path(__file__).resolve().parent.parent.parent / "metadata" / "entity_relationships_corrected.yaml"
+    try:
+        import yaml
+        with open(yaml_path, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+            return data.get("entity_fallbacks", {})
+    except Exception:
+        return {}
+
+ENTITY_FALLBACKS = load_entity_fallbacks()
+
+
 def connect_anchor_tables(anchors: Set[str], max_hops: int) -> Tuple[Set[str], List[Dict[str, Any]]]:
     """Step 3: Union pairwise shortest paths between all anchor tables."""
     anchors_list = sorted(list(anchors))
@@ -232,6 +251,18 @@ def connect_anchor_tables(anchors: Set[str], max_hops: int) -> Tuple[Set[str], L
             path, filters = shortest_path_bfs(t1, t2, max_hops=max_hops)
 
             if not path:
+                # 🟢 DYNAMIC METADATA FALLBACK: Reads entity_fallbacks from entity_relationships_corrected.yaml
+                alt_t1 = ENTITY_FALLBACKS.get(t1, t1)
+                alt_t2 = ENTITY_FALLBACKS.get(t2, t2)
+                if alt_t1 != t1 or alt_t2 != t2:
+                    alt_path, alt_filters = shortest_path_bfs(alt_t1, alt_t2, max_hops=max_hops)
+                    if alt_path:
+                        if alt_t1 != t1: connecting.discard(t1)
+                        if alt_t2 != t2: connecting.discard(t2)
+                        connecting.update(alt_path)
+                        propagated_filters.extend(alt_filters)
+                        continue
+
                 logger.warning(f"anchor_pair_unreachable: No path between `{t1}` and `{t2}` within {max_hops} hops.")
                 DEFAULT_LOGGING_STORE.log_stage(
                     session_id="schema_retrieval",
@@ -314,6 +345,16 @@ def schema_retrieval_node(state: GraphState) -> Dict[str, Any]:
 
     if not anchors and candidate_tables:
         anchors = set(list(candidate_tables)[:3])
+
+    # 🟢 DYNAMIC YAML ANCHOR NORMALIZATION:
+    # Swaps any disconnected anchor entity to its connected counterpart using YAML metadata
+    normalized_anchors = set()
+    for anc in anchors:
+        if anc in ENTITY_FALLBACKS:
+            normalized_anchors.add(ENTITY_FALLBACKS[anc])
+        else:
+            normalized_anchors.add(anc)
+    anchors = normalized_anchors
 
     # Step 3: Shortest-path traversal
     connecting_tables, prop_filters = connect_anchor_tables(anchors, max_hops=SCHEMA_RETRIEVAL_MAX_PATH_HOPS)

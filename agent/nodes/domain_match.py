@@ -225,11 +225,18 @@ def domain_match_node(state: GraphState) -> Dict[str, Any]:
         )
         return res
         
+    # 2e: Concept extraction for clean vector search
+    import re
+    # Clean math operators, question words, and entity literals for vector search focus
+    clean_concept = re.sub(r"\b(show|tell|give|list|me|what|who|where|how|many|much|is|are|the|a|an|total|average|mean|highest|lowest|sum|count)\b", "", question, flags=re.IGNORECASE).strip()
+    search_concept = clean_concept if len(clean_concept) > 3 else question
+
     res = {
         "allowed_domains": list(allowed_domains),
         "keyword_matched_domains": keyword_matched,
         "llm_matched_domains": llm_matched,
         "final_domains": valid_overlap,
+        "search_concept": search_concept,
     }
     
     DEFAULT_LOGGING_STORE.log_stage(

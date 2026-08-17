@@ -19,9 +19,9 @@ CRITICAL CONSTRAINTS:
 1. Target ONLY tables in the provided view dataset (`views_{role}.*`). NEVER query base/raw datasets (e.g. `base`, `lms`, `crm`, `los`).
 2. Generate EXACTLY ONE `SELECT` or `WITH` statement. No DDL/DML (no `INSERT`, `UPDATE`, `DELETE`, `DROP`, `CREATE`, `ALTER`).
 3. DO NOT USE `SELECT *`. You MUST explicitly enumerate the required columns (e.g. `SELECT employee_id, name, branch_id`).
-4. Output MODE BIAS:
-   - If Output Mode is "summary": Bias toward aggregations (`COUNT`, `SUM`, `AVG`), `GROUP BY`, and top metrics rather than raw row lists.
-   - If Output Mode is "exact": Select individual fields suitable for tabular display.
+4. Output MODE BIAS & AGGREGATIONS:
+   - If Output Mode is "summary" OR if the question asks for "total", "average", "mean", "count", or "sum", you MUST apply an aggregate function (`SUM()`, `AVG()`, `COUNT()`) to output summary metric rows rather than un-aggregated lists of thousands of rows.
+   - If Output Mode is "exact" and no aggregation is requested, select individual fields suitable for tabular display.
 5. Use literal enum strings provided in the schema context (e.g. `'npa'`, `'approved'`, `'Jaipur Branch'`) matching exact case.
 6. Output ONLY the executable SQL query inside ```sql ... ``` code block. No markdown conversation text.
 7. Use ONLY column names that explicitly appear in the provided Schema Context. NEVER invent or assume column names (e.g. use `c.name` for customer name, NOT `c.customer_name`; do NOT use `interest_amount` or `principal_amount` unless explicitly in Schema Context; use `disbursed_amount` and `interest_rate`).
@@ -30,8 +30,19 @@ CRITICAL CONSTRAINTS:
 9. Column ownership: `min_amount` and `max_amount` belong to `loan_products p` (NOT `loans l`). On `loans l`, available columns are `disbursed_amount`, `interest_rate`, `tenure_months`, `disbursement_date`, `status`. NEVER reference `min_amount` or `max_amount` on `loans l`.
 10. When referencing columns in JOIN queries, ALWAYS qualify columns with the correct table alias (e.g. `l.disbursed_amount` for `loans l`, `b.branch_name` for `branches b`).
 11. Strictly follow Foreign Key relationship paths in Schema Context when joining tables (e.g. `customers c` joins to `loans l` on `c.customer_id = l.customer_id`, NOT `c.branch_id`).
+12. RELATIONAL ENTITY vs COLUMN GUARDRAIL:
+    - `compliance_flags`, `customer_risk_scores`, `kyc_documents`, `insurance_claims`, `insurance_policies`, `support_tickets`, and `collections_activity` are SEPARATE RELATIONAL TABLES, NOT columns or arrays on `loans` or `customers`.
+    - NEVER reference `l.compliance_flags`, `c.credit_score`, `l.risk_category`, `l.claims`, or `c.kyc_documents`.
+    - ALWAYS explicitly `JOIN` the target table (e.g. `JOIN views_{role}.compliance_flags cf ON l.loan_id = cf.loan_id` or `JOIN views_{role}.customer_risk_scores crs ON c.customer_id = crs.customer_id`).
+13. COMPLIANCE FLAG ENUMS:
+    - `compliance_flags.status` enum values are: `'open'`, `'under_investigation'`, `'escalated'`, `'resolved'`.
+    - Active/unresolved flags are categorized under `'open'`, `'under_investigation'`, or `'escalated'` (do NOT filter `cf.status = 'active'`).
+14. INSURANCE CLAIMS vs POLICIES:
+    - To query actual filed claim amounts, `JOIN views_{role}.insurance_claims ic ON ip.policy_id = ic.policy_id` and use `ic.claim_amount`.
+    - `ip.sum_assured` in `insurance_policies` represents maximum policy coverage limit, NOT filed claim amounts.
+15. CASE-INSENSITIVE STRING COMPARISON:
+    - Always use `LOWER()` for string equality comparisons in `WHERE` clauses (e.g. `LOWER(status) = 'active'` or `LOWER(city) = 'jaipur'`) to prevent case-sensitivity mismatches.
 """
-
 
 
 

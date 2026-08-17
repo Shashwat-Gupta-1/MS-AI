@@ -1,3 +1,10 @@
+entity_fallbacks:
+  loans: loan_applications
+  insurance_policies: insurance_claims
+  compliance_flags: customers
+  support_tickets: customers
+  incentive_payouts: employees
+  overdue_accounts: loan_applications
 relationships:
 - from_table: employees
   from_column: branch_id
@@ -6,6 +13,7 @@ relationships:
   relationship_type: based_at
   filter: null
   derivation: direct_ref
+  data_matched: true
 - from_table: loan_applications
   from_column: customer_id
   to_table: customers
@@ -13,6 +21,7 @@ relationships:
   relationship_type: applied_by
   filter: null
   derivation: direct_ref
+  data_matched: true
 - from_table: loan_applications
   from_column: product_id
   to_table: loan_products
@@ -20,6 +29,7 @@ relationships:
   relationship_type: for_product
   filter: null
   derivation: direct_ref
+  data_matched: true
 - from_table: loan_applications
   from_column: branch_id
   to_table: branches
@@ -27,6 +37,7 @@ relationships:
   relationship_type: submitted_at
   filter: null
   derivation: direct_ref
+  data_matched: true
 - from_table: kyc_documents
   from_column: customer_id
   to_table: customers
@@ -34,6 +45,7 @@ relationships:
   relationship_type: identity_of
   filter: null
   derivation: direct_ref
+  data_matched: true
 - from_table: customer_risk_scores
   from_column: customer_id
   to_table: customers
@@ -41,13 +53,15 @@ relationships:
   relationship_type: risk_profile_of
   filter: null
   derivation: direct_ref
+  data_matched: true
 - from_table: loans
   from_column: application_id
   to_table: loan_applications
   to_column: application_id
   relationship_type: originated_from
-  filter: status=approved
+  filter: null
   derivation: direct_ref
+  data_matched: false
 - from_table: loans
   from_column: customer_id
   to_table: customers
@@ -55,6 +69,7 @@ relationships:
   relationship_type: is_borrower_of
   filter: null
   derivation: same_as_ref (copied via loans.application_id, corrected to true target)
+  data_matched: false
 - from_table: loans
   from_column: product_id
   to_table: loan_products
@@ -62,6 +77,7 @@ relationships:
   relationship_type: for_product
   filter: null
   derivation: same_as_ref (copied via loans.application_id, corrected to true target)
+  data_matched: false
 - from_table: loans
   from_column: branch_id
   to_table: branches
@@ -69,27 +85,32 @@ relationships:
   relationship_type: disbursed_by
   filter: null
   derivation: same_as_ref (copied via loans.application_id, corrected to true target)
+  data_matched: false
 - from_table: collections_activity
   from_column: loan_id
   to_table: loans
   to_column: loan_id
   relationship_type: recovery_action_on
   filter: null
-  derivation: 'direct_ref (corrected: yaml sources from overdue_accounts, true FK target is loans)'
+  derivation: 'direct_ref (corrected: yaml sources from overdue_accounts, true FK
+    target is loans)'
+  data_matched: false
 - from_table: collections_activity
   from_column: employee_id
   to_table: employees
   to_column: employee_id
   relationship_type: handled_by
-  filter: role=collections_agent
+  filter: null
   derivation: direct_ref_filtered
+  data_matched: true
 - from_table: incentive_payouts
   from_column: employee_id
   to_table: employees
   to_column: employee_id
   relationship_type: earned_by
-  filter: role=loan_officer
+  filter: null
   derivation: direct_ref_filtered
+  data_matched: true
 - from_table: incentive_payouts
   from_column: loan_id
   to_table: loans
@@ -97,6 +118,7 @@ relationships:
   relationship_type: earned_against
   filter: null
   derivation: direct_ref
+  data_matched: false
 - from_table: zoho_employee_records
   from_column: employee_id
   to_table: employees
@@ -104,6 +126,7 @@ relationships:
   relationship_type: hr_record_of
   filter: null
   derivation: direct_ref
+  data_matched: true
 - from_table: campaigns
   from_column: product_id
   to_table: loan_products
@@ -111,13 +134,15 @@ relationships:
   relationship_type: promotes
   filter: null
   derivation: direct_ref
+  data_matched: true
 - from_table: campaigns
   from_column: campaign_manager_id
   to_table: employees
   to_column: employee_id
   relationship_type: managed_by
-  filter: role=sales_rep
+  filter: null
   derivation: direct_ref_filtered
+  data_matched: true
 - from_table: leads
   from_column: campaign_id
   to_table: campaigns
@@ -125,6 +150,7 @@ relationships:
   relationship_type: sourced_via
   filter: null
   derivation: direct_ref
+  data_matched: true
 - from_table: leads
   from_column: product_id
   to_table: loan_products
@@ -132,13 +158,15 @@ relationships:
   relationship_type: interested_in
   filter: null
   derivation: direct_ref
+  data_matched: true
 - from_table: leads
   from_column: assigned_employee_id
   to_table: employees
   to_column: employee_id
   relationship_type: assigned_to
-  filter: role=sales_rep
+  filter: null
   derivation: direct_ref_filtered
+  data_matched: true
 - from_table: lead_activities
   from_column: lead_id
   to_table: leads
@@ -146,13 +174,15 @@ relationships:
   relationship_type: touchpoint_on
   filter: null
   derivation: direct_ref
+  data_matched: true
 - from_table: lead_activities
   from_column: employee_id
   to_table: employees
   to_column: employee_id
   relationship_type: performed_by
-  filter: role=sales_rep
+  filter: null
   derivation: direct_ref_filtered
+  data_matched: true
 - from_table: campaign_responses
   from_column: campaign_id
   to_table: campaigns
@@ -160,6 +190,7 @@ relationships:
   relationship_type: responds_to
   filter: null
   derivation: direct_ref
+  data_matched: true
 - from_table: campaign_responses
   from_column: lead_id
   to_table: leads
@@ -167,6 +198,7 @@ relationships:
   relationship_type: response_from
   filter: null
   derivation: direct_ref
+  data_matched: true
 - from_table: treasury_transactions
   from_column: funding_source_id
   to_table: funding_sources
@@ -174,6 +206,7 @@ relationships:
   relationship_type: cash_flow_against
   filter: null
   derivation: direct_ref
+  data_matched: true
 - from_table: insurance_policies
   from_column: loan_id
   to_table: loans
@@ -181,20 +214,24 @@ relationships:
   relationship_type: attached_to
   filter: null
   derivation: direct_ref
+  data_matched: true
 - from_table: insurance_policies
   from_column: customer_id
   to_table: loans
   to_column: customer_id
   relationship_type: is_insured_person
   filter: null
-  derivation: same_as_ref (copied via insurance_policies.loan_id, corrected to true target)
+  derivation: same_as_ref (copied via insurance_policies.loan_id, corrected to true
+    target)
+  data_matched: true
 - from_table: insurance_policies
   from_column: sold_by_employee_id
   to_table: employees
   to_column: employee_id
   relationship_type: sold_by
-  filter: role=loan_officer
+  filter: null
   derivation: direct_ref_filtered
+  data_matched: false
 - from_table: insurance_claims
   from_column: policy_id
   to_table: insurance_policies
@@ -202,6 +239,7 @@ relationships:
   relationship_type: claim_against
   filter: null
   derivation: direct_ref
+  data_matched: false
 - from_table: audit_logs
   from_column: performed_by_employee_id
   to_table: employees
@@ -209,6 +247,7 @@ relationships:
   relationship_type: performed_by
   filter: null
   derivation: direct_ref
+  data_matched: true
 - from_table: audit_logs
   from_column: branch_id
   to_table: branches
@@ -216,6 +255,7 @@ relationships:
   relationship_type: occurred_at
   filter: null
   derivation: direct_ref
+  data_matched: true
 - from_table: compliance_flags
   from_column: customer_id
   to_table: customers
@@ -223,6 +263,7 @@ relationships:
   relationship_type: raised_against_customer
   filter: null
   derivation: direct_ref
+  data_matched: false
 - from_table: compliance_flags
   from_column: loan_id
   to_table: loans
@@ -230,6 +271,7 @@ relationships:
   relationship_type: raised_against_loan
   filter: null
   derivation: direct_ref
+  data_matched: false
 - from_table: compliance_flags
   from_column: branch_id
   to_table: branches
@@ -237,6 +279,7 @@ relationships:
   relationship_type: raised_at
   filter: null
   derivation: direct_ref
+  data_matched: false
 - from_table: support_tickets
   from_column: customer_id
   to_table: customers
@@ -244,6 +287,7 @@ relationships:
   relationship_type: raised_by
   filter: null
   derivation: direct_ref
+  data_matched: true
 - from_table: support_tickets
   from_column: loan_id
   to_table: loans
@@ -251,6 +295,7 @@ relationships:
   relationship_type: concerns_loan
   filter: null
   derivation: direct_ref
+  data_matched: false
 - from_table: support_tickets
   from_column: assigned_employee_id
   to_table: employees
@@ -258,6 +303,7 @@ relationships:
   relationship_type: assigned_to
   filter: null
   derivation: direct_ref
+  data_matched: true
 - from_table: support_tickets
   from_column: branch_id
   to_table: branches
@@ -265,6 +311,7 @@ relationships:
   relationship_type: handled_at
   filter: null
   derivation: direct_ref
+  data_matched: true
 - from_table: ticket_interactions
   from_column: ticket_id
   to_table: support_tickets
@@ -272,6 +319,7 @@ relationships:
   relationship_type: interaction_on
   filter: null
   derivation: direct_ref
+  data_matched: true
 - from_table: ticket_interactions
   from_column: employee_id
   to_table: employees
@@ -279,3 +327,12 @@ relationships:
   relationship_type: logged_by
   filter: null
   derivation: direct_ref
+  data_matched: true
+- from_table: overdue_accounts
+  from_column: loan_id
+  to_table: loans
+  to_column: loan_id
+  relationship_type: overdue_loan
+  filter: null
+  derivation: direct_ref
+  data_matched: false
