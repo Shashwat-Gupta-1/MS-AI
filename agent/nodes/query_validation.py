@@ -83,11 +83,12 @@ def validate_sql_query(
             "offending_sql_fragment": sql_upper[:30],
         }, 0
 
-    # Rule 3: Prohibit bare SELECT *
+    # Rule 3: Prohibit bare SELECT * (allow COUNT(*))
     has_star = False
     for star in ast.find_all(exp.Star):
-        has_star = True
-        break
+        if not isinstance(star.parent, exp.Count):
+            has_star = True
+            break
     if has_star:
         return False, {
             "rule_violated": "Rule 3: Bare SELECT * Prohibition",

@@ -14,6 +14,7 @@ load_dotenv()
 
 from config_guardrails import (
     DEFAULT_GROQ_MODEL,
+    FALLBACK_GROQ_MODEL,
     GROQ_RATE_LIMIT_BACKOFF_BASE,
     GROQ_MAX_RETRIES,
 )
@@ -124,10 +125,10 @@ def invoke_groq_with_retry(
 
     for attempt in range(total_attempts):
         active_key = KEY_ROTATOR.get_next_key()
-        # Fallback to llama-3.1-8b-instant if 70b hits daily TPD limit
+        # Fallback to FALLBACK_GROQ_MODEL if primary model hits rate/token limits
         active_model = model_name or DEFAULT_GROQ_MODEL
         if attempt >= len(keys):
-            active_model = "llama-3.1-8b-instant"
+            active_model = FALLBACK_GROQ_MODEL
 
         try:
             llm = get_groq_model(model_name=active_model, temperature=temperature, api_key=active_key)
@@ -146,7 +147,7 @@ def invoke_groq_with_retry(
                 time.sleep(0.5)
 
 
-    llm = get_groq_model(model_name="llama-3.1-8b-instant", temperature=temperature)
+    llm = get_groq_model(model_name=FALLBACK_GROQ_MODEL, temperature=temperature)
     return llm.invoke(messages)
 
 

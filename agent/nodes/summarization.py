@@ -142,8 +142,8 @@ def summarization_node(state: GraphState) -> Dict[str, Any]:
     total_rows = len(df)
     
     try:
-        # Optimization: Single-Pass for small result sets (<= 50 rows)
-        if total_rows <= 50:
+        # Optimization: Single-Pass for result sets (<= 500 rows)
+        if total_rows <= 500:
             prompt = SINGLE_PASS_PROMPT.format(
                 question=question,
                 total_rows=total_rows,
@@ -167,8 +167,30 @@ def summarization_node(state: GraphState) -> Dict[str, Any]:
             )
             return {"final_response": final_summary, "status": "completed"}
             
-        # Multi-Chunk Map-Reduce for large result sets (> 50 rows)
-        chunk_size = SUMMARIZATION_CHUNK_ROW_SIZE
+        # Sampling Optimization for massive result sets (> 500 rows)
+        sample_df = df.head(300)
+        prompt = SINGLE_PASS_PROMPT.format(
+            question=question,
+            total_rows=total_rows,
+            data_csv=sample_df.to_csv(index=False),
+        )
+        response = invoke_groq_with_retry([HumanMessage(content=prompt)], temperature=0.2)
+        final_summary = response.content.strip()
+        meta = getattr(response, "response_metadata", {}) or {}
+        
+        DEFAULT_LOGGING_STORE.log_stage(
+            session_id=session_id,
+            role=role,
+            turn_index=0,
+            stage="summarization_sampled_pass",
+            input_data={"total_rows": total_rows, "sampled_rows": len(sample_df)},
+            output_data=final_summary,
+            success=True,
+            latency_ms=(time.time() - start_time) * 1000,
+            llm_model=meta.get("model_name"),
+            tokens_used=meta.get("token_usage"),
+        )
+        return {"final_response": final_summary, "status": "completed"}
         partial_summaries = []
         
         for i in range(0, total_rows, chunk_size):

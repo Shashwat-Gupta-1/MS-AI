@@ -33,6 +33,7 @@ def session_turn_saver_node(state: GraphState) -> Dict[str, Any]:
     response = state.get("final_response")
     domains = state.get("final_domains", [])
     tables = state.get("retrieved_tables", [])
+    schema = state.get("schema_context", "")
     
     DEFAULT_SESSION_STORE.append_turn(
         user_id=user_id,
@@ -42,6 +43,7 @@ def session_turn_saver_node(state: GraphState) -> Dict[str, Any]:
         final_response=response,
         matched_domains=domains,
         retrieved_tables=tables,
+        schema_context=schema,
     )
     return {"status": "completed"}
 

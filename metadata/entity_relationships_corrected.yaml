@@ -1,10 +1,11 @@
 entity_fallbacks:
-  loans: loan_applications
-  insurance_policies: insurance_claims
-  compliance_flags: customers
-  support_tickets: customers
-  incentive_payouts: employees
-  overdue_accounts: loan_applications
+  loans: loans
+  collections_activity: collections_activity
+  insurance_policies: insurance_policies
+  compliance_flags: compliance_flags
+  support_tickets: support_tickets
+  incentive_payouts: incentive_payouts
+  overdue_accounts: overdue_accounts
 relationships:
 - from_table: employees
   from_column: branch_id
@@ -61,7 +62,7 @@ relationships:
   relationship_type: originated_from
   filter: null
   derivation: direct_ref
-  data_matched: false
+  data_matched: true
 - from_table: loans
   from_column: customer_id
   to_table: customers
@@ -69,7 +70,7 @@ relationships:
   relationship_type: is_borrower_of
   filter: null
   derivation: same_as_ref (copied via loans.application_id, corrected to true target)
-  data_matched: false
+  data_matched: true
 - from_table: loans
   from_column: product_id
   to_table: loan_products
@@ -77,7 +78,7 @@ relationships:
   relationship_type: for_product
   filter: null
   derivation: same_as_ref (copied via loans.application_id, corrected to true target)
-  data_matched: false
+  data_matched: true
 - from_table: loans
   from_column: branch_id
   to_table: branches
@@ -85,7 +86,7 @@ relationships:
   relationship_type: disbursed_by
   filter: null
   derivation: same_as_ref (copied via loans.application_id, corrected to true target)
-  data_matched: false
+  data_matched: true
 - from_table: collections_activity
   from_column: loan_id
   to_table: loans
@@ -94,7 +95,7 @@ relationships:
   filter: null
   derivation: 'direct_ref (corrected: yaml sources from overdue_accounts, true FK
     target is loans)'
-  data_matched: false
+  data_matched: true
 - from_table: collections_activity
   from_column: employee_id
   to_table: employees
@@ -118,7 +119,7 @@ relationships:
   relationship_type: earned_against
   filter: null
   derivation: direct_ref
-  data_matched: false
+  data_matched: true
 - from_table: zoho_employee_records
   from_column: employee_id
   to_table: employees
@@ -231,7 +232,7 @@ relationships:
   relationship_type: sold_by
   filter: null
   derivation: direct_ref_filtered
-  data_matched: false
+  data_matched: true
 - from_table: insurance_claims
   from_column: policy_id
   to_table: insurance_policies
@@ -239,7 +240,7 @@ relationships:
   relationship_type: claim_against
   filter: null
   derivation: direct_ref
-  data_matched: false
+  data_matched: true
 - from_table: audit_logs
   from_column: performed_by_employee_id
   to_table: employees
@@ -263,7 +264,7 @@ relationships:
   relationship_type: raised_against_customer
   filter: null
   derivation: direct_ref
-  data_matched: false
+  data_matched: true
 - from_table: compliance_flags
   from_column: loan_id
   to_table: loans
@@ -271,7 +272,7 @@ relationships:
   relationship_type: raised_against_loan
   filter: null
   derivation: direct_ref
-  data_matched: false
+  data_matched: true
 - from_table: compliance_flags
   from_column: branch_id
   to_table: branches
@@ -279,7 +280,7 @@ relationships:
   relationship_type: raised_at
   filter: null
   derivation: direct_ref
-  data_matched: false
+  data_matched: true
 - from_table: support_tickets
   from_column: customer_id
   to_table: customers
@@ -295,7 +296,7 @@ relationships:
   relationship_type: concerns_loan
   filter: null
   derivation: direct_ref
-  data_matched: false
+  data_matched: true
 - from_table: support_tickets
   from_column: assigned_employee_id
   to_table: employees
@@ -335,4 +336,4 @@ relationships:
   relationship_type: overdue_loan
   filter: null
   derivation: direct_ref
-  data_matched: false
+  data_matched: true

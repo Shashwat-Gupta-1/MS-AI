@@ -106,6 +106,7 @@ def router_node(state: GraphState) -> Dict[str, Any]:
             active_domains = session.get("active_domains", [])
             active_tables = session.get("active_tables", [])
             active_schema = session.get("active_schema_context", "")
+            last_turn = turns[-1] if turns else {}
             
             res = {
                 "case_type": "case_b",
@@ -113,6 +114,8 @@ def router_node(state: GraphState) -> Dict[str, Any]:
                 "final_domains": active_domains,
                 "retrieved_tables": active_tables,
                 "schema_context": active_schema,
+                "prior_question": last_turn.get("question"),
+                "prior_sql": last_turn.get("sql_query"),
             }
             chosen_case = "case_b"
         else:

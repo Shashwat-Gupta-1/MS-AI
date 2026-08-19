@@ -1,0 +1,103 @@
+{
+  "summary": {
+    "passed": 10,
+    "failed": 2
+  },
+  "results": [
+    {
+      "id": 1,
+      "question": "What is the total loan amount disbursed in Rajasthan across all products?",
+      "passed": true,
+      "latency": 17.530417919158936,
+      "sql": "SELECT \n  SUM(CAST(l.disbursed_amount AS NUMERIC)) AS total_disbursed_amount\nFROM \n  views_executive.loans l\nJOIN \n  views_executive.branches b\n  ON l.branch_id = b.branch_id\nWHERE \n  LOWER(b.state) = 'rajasthan'",
+      "resp": "[{'total_disbursed_amount': '5733900957.900000000'}]"
+    },
+    {
+      "id": 2,
+      "question": "Summarize the total disbursement amount, average interest rate, and status breakdown for loans disbursed in Rajasthan",
+      "passed": true,
+      "latency": 19.267021656036377,
+      "sql": "SELECT\n  SUM(CAST(l.disbursed_amount AS NUMERIC)) AS total_disbursed_amount,\n  AVG(CAST(l.interest_rate AS NUMERIC))   AS average_interest_rate,\n  COUNTIF(LOWER(l.status) = 'active')      AS active_loans,\n  COUNTIF(LOWER(l.status) = 'closed')      AS closed_loans,\n  COUNTIF(LOWER(l.status) = 'npa')         AS npa_loans,\n  COUNTIF(LOWER(l.status) = 'written_off') AS written_off_loans\nFROM\n  `views_executive.loans` AS l\nJOIN\n  `views_executive.branches` AS b\nON\n  l.branch_id = b.branch_id\nWHERE\n  LOWER(b.state) = 'rajasthan'",
+      "resp": "**Executive Summary \u2013 Rajasthan Loan Portfolio (Disbursed Loans)**  \n\n- **Total Disbursed Amount:** **\u20b9\u202f5,733,900,958**  \n- **Average Interest Rate:**"
+    },
+    {
+      "id": 3,
+      "question": "Which branch has the highest active loan count?",
+      "passed": true,
+      "latency": 16.557554244995117,
+      "sql": "SELECT\n  b.branch_name,\n  COUNT(*) AS active_loan_count\nFROM `views_executive.loans` AS l\nJOIN `views_executive.branches` AS b\n  ON l.branch_id = b.branch_id\nWHERE LOWER(l.status) = 'active'\nGROUP BY b.branch_name\nORDER BY active_loan_count DESC\nLIMIT 1",
+      "resp": "[{'branch_name': 'Deoghar Branch', 'active_loan_count': 2541}]"
+    },
+    {
+      "id": 4,
+      "question": "Give an executive summary of top 5 branches by active loan balance",
+      "passed": true,
+      "latency": 19.676395416259766,
+      "sql": "SELECT\n  b.branch_id,\n  b.branch_name,\n  b.region,\n  b.state,\n  SUM(CAST(l.disbursed_amount AS NUMERIC)) AS total_active_balance,\n  COUNT(l.loan_id) AS active_loan_count\nFROM `views_executive.loans` AS l\nJOIN `views_executive.branches` AS b\n  ON l.branch_id = b.branch_id\nWHERE LOWER(l.status) = 'active'\nGROUP BY\n  b.branch_id,\n  b.branch_name,\n  b.region,\n  b.state\nORDER BY total_active_balance DESC\nLIMIT 5",
+      "resp": "**Executive Summary \u2013 Top 5 Branches by Active Loan Balance**\n\n- **Overall Scale**  \n  - **Combined active loan balance:** **\u20b9\u202f1.12\u202fbillion** (\u20b9\u202f1,124"
+    },
+    {
+      "id": 5,
+      "question": "What is the average loan tenure and interest rate for personal loan products?",
+      "passed": true,
+      "latency": 17.31560230255127,
+      "sql": "SELECT\n  AVG(CAST(l.tenure_months AS NUMERIC)) AS avg_tenure_months,\n  AVG(CAST(l.interest_rate AS NUMERIC)) AS avg_interest_rate\nFROM `views_executive.loans` AS l\nJOIN `views_executive.loan_products` AS p\n  ON l.product_id = p.product_id\nWHERE LOWER(p.loan_type) = 'personal'",
+      "resp": "[{'avg_tenure_months': '31.736441967', 'avg_interest_rate': '16.041089035'}]"
+    },
+    {
+      "id": 6,
+      "question": "List the top 3 states with the highest loan rejection rate for self employed applicants in the last 6 months",
+      "passed": true,
+      "latency": 18.47191333770752,
+      "sql": "SELECT\n  c.state,\n  SAFE_DIVIDE(COUNTIF(la.status = 'rejected'), COUNT(*)) AS rejection_rate\nFROM `views_executive.loan_applications` AS la\nJOIN `views_executive.customers` AS c\n  ON la.customer_id = c.customer_id\nWHERE\n  REPLACE(REPLACE(LOWER(c.occupation), '-', '_'), ' ', '_') = 'self_employed'\n  AND DATE(la.application_date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)\nGROUP BY\n  c.state\nORDER BY\n  rejection_rate DESC\nLIMIT 3",
+      "resp": "[{'state': 'Rajasthan', 'rejection_rate': 0.2506437768240343}, {'state': 'Karnataka', 'rejection_rate': 0.24024284475281873}, {'state': 'Uttar Pradesh"
+    },
+    {
+      "id": 7,
+      "question": "What is the total disbursed amount for self-employed borrowers in Maharashtra?",
+      "passed": true,
+      "latency": 16.76134204864502,
+      "sql": "SELECT\n  SUM(CAST(l.disbursed_amount AS NUMERIC)) AS total_disbursed_amount\nFROM\n  views_executive.loans AS l\nJOIN\n  views_executive.customers AS c\n  ON l.customer_id = c.customer_id\nWHERE\n  REPLACE(REPLACE(LOWER(c.occupation), '-', '_'), ' ', '_') = 'self_employed'\n  AND LOWER(c.state) = 'maharashtra'",
+      "resp": "[{'total_disbursed_amount': '1328215085.530000000'}]"
+    },
+    {
+      "id": 8,
+      "question": "Summarize application rejection reasons for self_employed vs salaried applicants",
+      "passed": true,
+      "latency": 27.23289704322815,
+      "sql": "SELECT\n  c.occupation AS occupation,\n  la.rejection_reason AS rejection_reason,\n  COUNT(*) AS rejection_count\nFROM\n  views_executive.loan_applications AS la\nJOIN\n  views_executive.customers AS c\n  ON la.customer_id = c.customer_id\nWHERE\n  LOWER(la.status) = 'rejected'\n  AND REPLACE(REPLACE(LOWER(c.occupation), '-', '_'), ' ', '_') IN ('self_employed', 'salaried')\nGROUP BY\n  c.occupation,\n  la.rejection_reason\nORDER BY\n  c.occupation,\n  rejection_count DESC",
+      "resp": "**Executive Summary \u2013 Application Rejection Drivers (Self\u2011Employed vs. Salaried)**  \n\n| Metric | Salaried Applicants | Self\u2011Employed Applicants |\n|---"
+    },
+    {
+      "id": 9,
+      "question": "How many business_owner customers are registered in Jaipur?",
+      "passed": true,
+      "latency": 15.789908409118652,
+      "sql": "SELECT COUNT(DISTINCT c.customer_id) AS business_owner_customers_in_jaipur\nFROM `views_executive.customers` AS c\nWHERE LOWER(c.occupation) = 'business_owner'\n  AND LOWER(c.city) = 'jaipur'",
+      "resp": "[{'business_owner_customers_in_jaipur': 252}]"
+    },
+    {
+      "id": 10,
+      "question": "Find total disbursement for gold loan products in North region",
+      "passed": true,
+      "latency": 16.222617864608765,
+      "sql": "SELECT \n  SUM(CAST(l.disbursed_amount AS NUMERIC)) AS total_disbursement\nFROM `views_executive.loans` AS l\nJOIN `views_executive.loan_products` AS p\n  ON l.product_id = p.product_id\nJOIN `views_executive.branches` AS b\n  ON l.branch_id = b.branch_id\nWHERE LOWER(p.loan_type) = 'gold'\n  AND LOWER(b.region) = 'north'",
+      "resp": "[{'total_disbursement': '1351972623.880000000'}]"
+    },
+    {
+      "id": 20,
+      "question": "Summarize lead conversion rates and total loans generated by campaign",
+      "passed": false,
+      "latency": 90.01714873313904,
+      "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out. (read timeout=90)"
+    },
+    {
+      "id": 32,
+      "question": "What is the total outstanding debt across institutional lenders in treasury?",
+      "passed": false,
+      "latency": 27.34629511833191,
+      "sql": "WITH latest_balances AS (\n  SELECT\n    t.funding_source_id,\n    CAST(t.book_balance_after AS NUMERIC) AS balance\n  FROM `views_executive.treasury_transactions` AS t\n  QUALIFY ROW_NUMBER() OVER (\n    PARTITION BY t.funding_source_id\n    ORDER BY DATE(t.transaction_date) DESC\n  ) = 1\n)\n\nSELECT\n  SUM(lb.balance) AS total_outstanding_debt\nFROM latest_balances AS lb\nJOIN `views_executive.funding_sources` AS f\n  ON lb.funding_source_id = f.funding_source_id\nWHERE LOWER(f.category) = 'institutional'",
+      "error": "I was unable to build a valid query for this question after multiple attempts. Please try rephrasing your question."
+    }
+  ]
+}

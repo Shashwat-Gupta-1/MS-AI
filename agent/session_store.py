@@ -28,6 +28,7 @@ class SessionStore(ABC):
         final_response: Any,
         matched_domains: List[str],
         retrieved_tables: List[str],
+        schema_context: Optional[str] = None,
     ) -> None:
         """Append completed turn context to session state."""
         pass
@@ -72,6 +73,7 @@ class MemorySessionStore(SessionStore):
         final_response: Any,
         matched_domains: List[str],
         retrieved_tables: List[str],
+        schema_context: Optional[str] = None,
     ) -> None:
         session = self.get_session(user_id, session_id)
         now = time.time()
@@ -82,11 +84,14 @@ class MemorySessionStore(SessionStore):
             "sql_query": sql_query,
             "matched_domains": matched_domains,
             "retrieved_tables": retrieved_tables,
+            "schema_context": schema_context,
         })
         if matched_domains:
             session["active_domains"] = matched_domains
         if retrieved_tables:
             session["active_tables"] = retrieved_tables
+        if schema_context:
+            session["active_schema_context"] = schema_context
     
     def get_last_turn_timestamp(self, user_id: str, session_id: str) -> Optional[float]:
         session = self.get_session(user_id, session_id)

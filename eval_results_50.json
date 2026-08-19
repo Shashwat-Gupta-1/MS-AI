@@ -1,0 +1,498 @@
+{
+  "summary": {
+    "passed": 38,
+    "failed": 12,
+    "total": 50
+  },
+  "results": [
+    {
+      "id": 1,
+      "question": "What is the total loan amount disbursed in Rajasthan across all products?",
+      "case": "Case A",
+      "mode": "exact",
+      "passed": false,
+      "latency": 60.00920581817627,
+      "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out. (read timeout=60)"
+    },
+    {
+      "id": 2,
+      "question": "Summarize the total disbursement amount, average interest rate, and status breakdown for loans disbursed in Rajasthan",
+      "case": "Case A",
+      "mode": "summary",
+      "passed": false,
+      "latency": 60.0200731754303,
+      "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out. (read timeout=60)"
+    },
+    {
+      "id": 3,
+      "question": "Which branch has the highest active loan count?",
+      "case": "Case A",
+      "mode": "exact",
+      "passed": false,
+      "latency": 21.67510676383972,
+      "error": "('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))"
+    },
+    {
+      "id": 4,
+      "question": "Give an executive summary of top 5 branches by active loan balance",
+      "case": "Case A",
+      "mode": "summary",
+      "passed": false,
+      "latency": 2.041869878768921,
+      "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /api/v1/chat (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
+      "id": 5,
+      "question": "What is the average loan tenure and interest rate for personal loan products?",
+      "case": "Case A",
+      "mode": "exact",
+      "passed": false,
+      "latency": 2.0585436820983887,
+      "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /api/v1/chat (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
+      "id": 6,
+      "question": "List the top 3 states with the highest loan rejection rate for self employed applicants in the last 6 months",
+      "case": "Case A",
+      "mode": "exact",
+      "passed": false,
+      "latency": 2.044485092163086,
+      "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /api/v1/chat (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
+      "id": 7,
+      "question": "What is the total disbursed amount for self-employed borrowers in Maharashtra?",
+      "case": "Case A",
+      "mode": "exact",
+      "passed": false,
+      "latency": 2.0461089611053467,
+      "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /api/v1/chat (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
+      "id": 8,
+      "question": "Summarize application rejection reasons for self_employed vs salaried applicants",
+      "case": "Case A",
+      "mode": "summary",
+      "passed": false,
+      "latency": 2.0389668941497803,
+      "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /api/v1/chat (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
+      "id": 9,
+      "question": "How many business_owner customers are registered in Jaipur?",
+      "case": "Case A",
+      "mode": "exact",
+      "passed": false,
+      "latency": 2.070918321609497,
+      "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /api/v1/chat (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
+      "id": 10,
+      "question": "Find total disbursement for gold loan products in North region",
+      "case": "Case A",
+      "mode": "exact",
+      "passed": false,
+      "latency": 2.0609421730041504,
+      "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /api/v1/chat (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [WinError 10061] No connection could be made because the target machine actively refused it\"))"
+    },
+    {
+      "id": 11,
+      "question": "Find total loan amount disbursed to self employed applicants in Maharashtra in the last 6 months",
+      "case": "Case B (Turn 1)",
+      "mode": "exact",
+      "passed": true,
+      "latency": 19.30828094482422,
+      "sql": "SELECT \n  SUM(CAST(l.disbursed_amount AS NUMERIC)) AS total_disbursed_amount\nFROM \n  views_executive.loans AS l\nJOIN \n  views_executive.customers AS c\n  ON l.customer_id = c.customer_id\nWHERE \n  REPLACE(REPLACE(LOWER(c.occupation), '-', '_'), ' ', '_') = 'self_employed'\n  AND LOWER(c.state) = 'maharashtra'\n  AND CAST(l.disbursement_date AS DATE) >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)",
+      "response_preview": "[{'total_disbursed_amount': '140298035.000000000'}]"
+    },
+    {
+      "id": 12,
+      "question": "now break that down by branch and show collection agent name also",
+      "case": "Case B (Turn 2)",
+      "mode": "exact",
+      "passed": true,
+      "latency": 7.476300477981567,
+      "sql": "SELECT\n  l.branch_id,\n  SUM(CAST(l.disbursed_amount AS NUMERIC)) AS total_disbursed_amount,\n  COUNT(DISTINCT l.loan_id) AS loan_count\nFROM `views_executive.loans` AS l\nGROUP BY l.branch_id\nORDER BY total_disbursed_amount DESC",
+      "response_preview": "[{'branch_id': '2c4ee015-3117-4385-bb66-2e3583966b18', 'total_disbursed_amount': '328432265.750000000', 'loan_count': 1343}, {'branch_id': 'f2744ffa-6"
+    },
+    {
+      "id": 13,
+      "question": "also include their total overdue amount and summarize the highest risk areas",
+      "case": "Case B (Turn 3)",
+      "mode": "summary",
+      "passed": true,
+      "latency": 11.440757989883423,
+      "sql": "SELECT\n  CASE \n    WHEN GROUPING(l.branch_id) = 0 THEN l.branch_id\n    ELSE 'ALL' \n  END AS risk_area,\n  SUM(CAST(l.disbursed_amount AS NUMERIC)) AS total_overdue_amount\nFROM `views_executive.loans` AS l\nWHERE LOWER(l.status) = 'npa'\nGROUP BY GROUPING SETS ((l.branch_id), ())\nORDER BY total_overdue_amount DESC",
+      "response_preview": "**Executive Summary \u2013 Over\u2011due Exposure by Risk Area**\n\n- **Total overdue amount (all risk areas):** **$3.20\u202fB** (\u202f$3,198,860,573.96\u202f)  \n- **Number of"
+    },
+    {
+      "id": 14,
+      "question": "Which branch has the highest percentage of their active loan portfolio in the 90+ days past due bucket?",
+      "case": "Case A",
+      "mode": "exact",
+      "passed": true,
+      "latency": 17.3662109375,
+      "sql": "WITH branch_active AS (\n  SELECT\n    b.branch_id,\n    b.branch_name,\n    COUNT(DISTINCT l.loan_id) AS total_active,\n    COUNT(DISTINCT CASE WHEN LOWER(oa.dpd_bucket) = '90+' THEN l.loan_id END) AS cnt_90plus\n  FROM `views_executive.loans` AS l\n  JOIN `views_executive.branches` AS b\n    ON l.branch_id = b.branch_id\n  LEFT JOIN `views_executive.overdue_accounts` AS oa\n    ON l.loan_id = oa.loan_id\n  WHERE LOWER(l.status) = 'active'\n  GROUP BY b.branch_id, b.branch_name\n)\n\nSELECT\n  branch_name,\n  SAFE_DIVIDE(cnt_90plus, total_active) * 100 AS pct_90plus_overdue\nFROM branch_active\nORDER BY pct_90plus_overdue DESC\nLIMIT 1",
+      "response_preview": "[{'branch_name': 'Bathinda Branch', 'pct_90plus_overdue': 51.42150803461063}]"
+    },
+    {
+      "id": 15,
+      "question": "Summarize total overdue principal recovered by collections agents last month",
+      "case": "Case A",
+      "mode": "summary",
+      "passed": true,
+      "latency": 20.801429510116577,
+      "sql": "WITH filtered_activity AS (\n  SELECT\n    ca.employee_id,\n    oa.overdue_amount\n  FROM `views_executive.collections_activity` ca\n  JOIN `views_executive.loans` l\n    ON ca.loan_id = l.loan_id\n  JOIN `views_executive.overdue_accounts` oa\n    ON l.loan_id = oa.loan_id\n  WHERE LOWER(ca.outcome) = 'paid'\n    AND DATE(ca.activity_date) BETWEEN DATE_TRUNC(DATE_SUB(CURRENT_DATE(), INTERVAL 1 MONTH), MONTH)\n                                 AND DATE_SUB(DATE_TRUNC(CURRENT_DATE(), MONTH), INTERVAL 1 DAY)\n)\n\nSELECT\n  e.name AS agent_name,\n  SUM(CAST(fa.overdue_amount AS NUMERIC)) AS total_overdue_principal_recovered\nFROM filtered_activity fa\nJOIN `views_executive.employees` e\n  ON fa.employee_id = e.employee_id\nGROUP BY e.name\nORDER BY total_overdue_principal_recovered DESC",
+      "response_preview": "**Executive Summary \u2013 Over\u2011due Principal Recovered (Last Month)**  \n\n| Metric | Value |\n|--------|-------|\n| **Total amount recovered** | **\u2248\u202f$70\u202fmill"
+    },
+    {
+      "id": 16,
+      "question": "List total overdue accounts by DPD bucket (30, 60, 90+ days)",
+      "case": "Case A",
+      "mode": "exact",
+      "passed": true,
+      "latency": 20.486147165298462,
+      "sql": "SELECT\n  CASE\n    WHEN LOWER(oa.dpd_bucket) = '0-30' THEN '30'\n    WHEN LOWER(oa.dpd_bucket) = '31-60' THEN '60'\n    WHEN LOWER(oa.dpd_bucket) IN ('61-90', '90+') THEN '90+'\n    ELSE oa.dpd_bucket\n  END AS dpd_bucket,\n  COUNT(DISTINCT oa.loan_id) AS total_overdue_accounts\nFROM `views_executive.overdue_accounts` AS oa\nWHERE LOWER(oa.dpd_bucket) IN ('0-30', '31-60', '61-90', '90+')\nGROUP BY dpd_bucket\nORDER BY dpd_bucket",
+      "response_preview": "[{'dpd_bucket': '30', 'total_overdue_accounts': 2830}, {'dpd_bucket': '60', 'total_overdue_accounts': 2863}, {'dpd_bucket': '90+', 'total_overdue_acco"
+    },
+    {
+      "id": 17,
+      "question": "Which collections agent has recovered the highest overdue amount?",
+      "case": "Case A",
+      "mode": "exact",
+      "passed": true,
+      "latency": 15.62223505973816,
+      "sql": "SELECT\n  e.name AS agent_name,\n  SUM(CAST(oa.overdue_amount AS NUMERIC)) AS total_recovered_overdue_amount\nFROM\n  `views_executive.collections_activity` AS ca\nJOIN\n  `views_executive.loans` AS l\n    ON ca.loan_id = l.loan_id\nJOIN\n  `views_executive.overdue_accounts` AS oa\n    ON l.loan_id = oa.loan_id\nJOIN\n  `views_executive.employees` AS e\n    ON ca.employee_id = e.employee_id\nWHERE\n  LOWER(ca.outcome) = 'paid'\nGROUP BY\n  e.name\nORDER BY\n  total_recovered_overdue_amount DESC\nLIMIT 1",
+      "response_preview": "[{'agent_name': 'Eta Tak', 'total_recovered_overdue_amount': '17241543.470000000'}]"
+    },
+    {
+      "id": 18,
+      "question": "Compare overdue recovery amounts between Senior Associates and standard Associates in Collections",
+      "case": "Case A",
+      "mode": "summary",
+      "passed": true,
+      "latency": 18.76790142059326,
+      "sql": "WITH recovered_loans AS (\n  SELECT DISTINCT\n    l.loan_id,\n    LOWER(REPLACE(REPLACE(zr.designation, '-', '_'), ' ', '_')) AS designation_norm\n  FROM `views_executive.collections_activity` ca\n  JOIN `views_executive.loans` l\n    ON ca.loan_id = l.loan_id\n  JOIN `views_executive.employees` e\n    ON ca.employee_id = e.employee_id\n  JOIN `views_executive.zoho_employee_records` zr\n    ON e.employee_id = zr.employee_id\n  WHERE LOWER(ca.outcome) = 'paid'\n    AND LOWER(zr.department) = 'collections'\n    AND LOWER(REPLACE(REPLACE(zr.designation, '-', '_'), ' ', '_')) IN ('associate', 'senior_associate')\n)\n\nSELECT\n  CASE\n    WHEN rl.designation_norm = 'senior_associate' THEN 'Senior Associate'\n    ELSE 'Associate'\n  END AS associate_level,\n  SUM(CAST(oa.overdue_amount AS NUMERIC)) AS total_overdue_recovery_amount\nFROM recovered_loans rl\nJOIN `views_executive.overdue_accounts` oa\n  ON rl.loan_id = oa.loan_id\nGROUP BY associate_level\nORDER BY associate_level",
+      "response_preview": "**Executive Summary \u2013 Overdue Recovery Performance (Collections)**  \n\n- **Total Overdue Recovery**  \n  - **Associates:**\u202f$188.9\u202fM  \n  - **Senior Assoc"
+    },
+    {
+      "id": 19,
+      "question": "Of all the customers acquired through the Digital First-Time Borrower campaign, what is the total disbursed loan amount, and how much of it is currently overdue?",
+      "case": "Case A",
+      "mode": "exact",
+      "passed": true,
+      "latency": 21.873283863067627,
+      "sql": "SELECT\n  SUM(CAST(l.disbursed_amount AS NUMERIC)) AS total_disbursed_amount,\n  SUM(COALESCE(CAST(oa.overdue_amount AS NUMERIC), 0)) AS total_overdue_amount\nFROM `views_executive`.loans AS l\nJOIN `views_executive`.loan_products AS p\n  ON l.product_id = p.product_id\nJOIN `views_executive`.campaigns AS c\n  ON p.product_id = c.product_id\nLEFT JOIN `views_executive`.overdue_accounts AS oa\n  ON l.loan_id = oa.loan_id\nWHERE LOWER(c.campaign_name) = LOWER('Digital First-Time Borrower')",
+      "response_preview": "[{'total_disbursed_amount': '10640065847466.900000000', 'total_overdue_amount': '1513169527406.210000000'}]"
+    },
+    {
+      "id": 20,
+      "question": "Summarize lead conversion rates and total loans generated by campaign",
+      "case": "Case A",
+      "mode": "summary",
+      "passed": false,
+      "latency": 60.01345467567444,
+      "error": "HTTPConnectionPool(host='127.0.0.1', port=8000): Read timed out. (read timeout=60)"
+    },
+    {
+      "id": 21,
+      "question": "What is the average lead response time for converted campaign leads?",
+      "case": "Case A",
+      "mode": "exact",
+      "passed": true,
+      "latency": 16.82826256752014,
+      "sql": "SELECT\n  AVG(CAST(cr.time_to_respond_hours AS NUMERIC)) AS avg_response_time_hours\nFROM\n  views_executive.campaign_responses AS cr\nWHERE\n  LOWER(CAST(cr.converted AS STRING)) = 'yes'",
+      "response_preview": "[{'avg_response_time_hours': None}]"
+    },
+    {
+      "id": 22,
+      "question": "List top 5 branches with the highest insurance claim payout for high risk customers",
+      "case": "Case A",
+      "mode": "exact",
+      "passed": true,
+      "latency": 17.35759997367859,
+      "sql": "SELECT\n  b.branch_id,\n  b.branch_name,\n  SUM(CAST(ic.settlement_amount AS NUMERIC)) AS total_settlement_amount\nFROM `views_executive.insurance_claims` AS ic\nJOIN `views_executive.insurance_policies` AS ip\n  ON ic.policy_id = ip.policy_id\nJOIN `views_executive.loans` AS l\n  ON ip.loan_id = l.loan_id\nJOIN `views_executive.branches` AS b\n  ON l.branch_id = b.branch_id\nJOIN `views_executive.customer_risk_scores` AS crs\n  ON l.customer_id = crs.customer_id\nWHERE REPLACE(REPLACE(LOWER(crs.risk_category), '-', '_'), ' ', '_') = 'high'\n  AND REPLACE(LOWER(ic.claim_status), '_', '') = 'approved'\nGROUP BY b.branch_id, b.branch_name\nORDER BY total_settlement_amount DESC\nLIMIT 5",
+      "response_preview": "[{'branch_id': '6f3e637f-dee2-4ec0-94b1-d2588b3c19ef', 'branch_name': 'Gwalior Branch', 'total_settlement_amount': '4472175.820000000'}, {'branch_id':"
+    },
+    {
+      "id": 23,
+      "question": "Summarize approved vs rejected insurance claim amounts across regions",
+      "case": "Case A",
+      "mode": "summary",
+      "passed": true,
+      "latency": 17.57906699180603,
+      "sql": "SELECT\n  ic.region,\n  LOWER(ic.claim_status) AS claim_status,\n  SUM(CAST(ic.claim_amount AS NUMERIC)) AS total_claim_amount\nFROM `views_executive.insurance_claims` AS ic\nWHERE LOWER(ic.claim_status) IN ('approved', 'rejected')\nGROUP BY ic.region, LOWER(ic.claim_status)\nORDER BY ic.region, claim_status",
+      "response_preview": "**Executive Summary \u2013 Insurance Claim Outcomes by Region**\n\n- **Overall Performance**\n  - Total claim amount processed: **$1.845\u202fbillion**\n  - Approve"
+    },
+    {
+      "id": 24,
+      "question": "How many active loans have an associated insurance policy?",
+      "case": "Case A",
+      "mode": "exact",
+      "passed": true,
+      "latency": 15.410761594772339,
+      "sql": "SELECT\n  COUNT(DISTINCT l.loan_id) AS active_loans_with_insurance\nFROM\n  `views_executive.loans` AS l\nJOIN\n  `views_executive.insurance_policies` AS ip\n    ON l.loan_id = ip.loan_id\nWHERE\n  LOWER(l.status) = 'active'",
+      "response_preview": "[{'active_loans_with_insurance': 45706}]"
+    },
+    {
+      "id": 25,
+      "question": "How many customers are currently classified as high risk?",
+      "case": "Case A",
+      "mode": "exact",
+      "passed": true,
+      "latency": 18.982068061828613,
+      "sql": "WITH latest_risk AS (\n  SELECT\n    crs.customer_id,\n    crs.risk_category,\n    ROW_NUMBER() OVER (\n      PARTITION BY crs.customer_id\n      ORDER BY crs.scored_at DESC\n    ) AS rn\n  FROM `views_executive.customer_risk_scores` AS crs\n)\n\nSELECT\n  COUNT(DISTINCT lr.customer_id) AS high_risk_customer_count\nFROM latest_risk AS lr\nWHERE lr.rn = 1\n  AND LOWER(lr.risk_category) = 'high'",
+      "response_preview": "[{'high_risk_customer_count': 63167}]"
+    },
+    {
+      "id": 26,
+      "question": "Summarize compliance flags raised by category in the last 12 months",
+      "case": "Case A",
+      "mode": "summary",
+      "passed": true,
+      "latency": 20.90475630760193,
+      "sql": "SELECT\n  cf.flag_type,\n  COUNT(cf.flag_id) AS flags_raised\nFROM `views_executive.compliance_flags` AS cf\nWHERE DATE(cf.raised_date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)\nGROUP BY cf.flag_type\nORDER BY flags_raised DESC",
+      "response_preview": "**Executive Summary \u2013 Compliance Flags (Last 12\u202fMonths)**  \n\n- **Total flags raised:** **3,568** across all categories.  \n- **Average flags per catego"
+    },
+    {
+      "id": 27,
+      "question": "What is the average risk score for borrowers with active NPA loans?",
+      "case": "Case A",
+      "mode": "exact",
+      "passed": true,
+      "latency": 16.150394201278687,
+      "sql": "SELECT\n  AVG(CAST(crs.credit_score AS NUMERIC)) AS avg_credit_score\nFROM\n  views_executive.loans AS l\nJOIN\n  views_executive.customers AS c\n  ON l.customer_id = c.customer_id\nJOIN\n  views_executive.customer_risk_scores AS crs\n  ON c.customer_id = crs.customer_id\nWHERE\n  LOWER(l.status) = 'npa'",
+      "response_preview": "[{'avg_credit_score': '678.523779320'}]"
+    },
+    {
+      "id": 28,
+      "question": "How many customers have pending KYC document verification?",
+      "case": "Case A",
+      "mode": "exact",
+      "passed": true,
+      "latency": 14.031046628952026,
+      "sql": "SELECT COUNT(DISTINCT kd.customer_id) AS pending_kyc_customers\nFROM `views_executive.kyc_documents` kd\nWHERE LOWER(kd.verification_status) = 'pending'",
+      "response_preview": "[{'pending_kyc_customers': 47757}]"
+    },
+    {
+      "id": 29,
+      "question": "Summarize document verification rejection counts by doc_type (PAN, Aadhaar, Passport)",
+      "case": "Case A",
+      "mode": "summary",
+      "passed": true,
+      "latency": 15.25966763496399,
+      "sql": "SELECT\n  kd.doc_type,\n  COUNT(*) AS rejection_count\nFROM `views_executive.kyc_documents` AS kd\nWHERE LOWER(kd.verification_status) = 'rejected'\n  AND LOWER(kd.doc_type) IN ('pan', 'aadhaar', 'passport')\nGROUP BY kd.doc_type\nORDER BY kd.doc_type",
+      "response_preview": "**Executive Summary \u2013 Document Verification Rejections**\n\n- **Overall Rejection Volume:**\u202f**18,621** total rejections across the three primary ID type"
+    },
+    {
+      "id": 30,
+      "question": "What is the average resolution time for open support tickets?",
+      "case": "Case A",
+      "mode": "exact",
+      "passed": true,
+      "latency": 14.00595474243164,
+      "sql": "SELECT\n  AVG(CAST(st.resolution_hours AS NUMERIC)) AS average_resolution_hours\nFROM `views_executive.support_tickets` AS st\nWHERE LOWER(st.status) = 'open'",
+      "response_preview": "[{'average_resolution_hours': '119.437601599'}]"
+    },
+    {
+      "id": 31,
+      "question": "Summarize support ticket counts by priority and resolution status",
+      "case": "Case A",
+      "mode": "summary",
+      "passed": true,
+      "latency": 23.477092504501343,
+      "sql": "SELECT\n  st.priority,\n  st.status,\n  COUNT(*) AS ticket_count\nFROM\n  views_executive.support_tickets AS st\nGROUP BY\n  st.priority,\n  st.status\nORDER BY\n  st.priority,\n  st.status",
+      "response_preview": "**Executive Summary \u2013 Support Ticket Landscape (70,000 tickets)**  \n\n- **Overall Volume** \u2013 70,000 tickets across four priority levels (high, low, med"
+    },
+    {
+      "id": 32,
+      "question": "What is the total outstanding debt across institutional lenders in treasury?",
+      "case": "Case A",
+      "mode": "exact",
+      "passed": false,
+      "latency": 22.4844069480896,
+      "sql": "WITH latest_balances AS (\n  SELECT\n    tt.funding_source_id,\n    CAST(tt.book_balance_after AS NUMERIC) AS book_balance\n  FROM `views_executive.treasury_transactions` AS tt\n  QUALIFY ROW_NUMBER() OVER (\n    PARTITION BY tt.funding_source_id\n    ORDER BY PARSE_DATE('%Y-%m-%d', tt.transaction_date) DESC\n  ) = 1\n)\n\nSELECT\n  SUM(lb.book_balance) AS total_outstanding_debt\nFROM latest_balances AS lb\nJOIN `views_executive.funding_sources` AS fs\n  ON lb.funding_source_id = fs.funding_source_id\nWHERE REPLACE(REPLACE(LOWER(fs.source_type), '-', '_'), ' ', '_')\n        IN ('bank_loan', 'market_borrowing', 'securitization')\n  AND REPLACE(REPLACE(LOWER(fs.status), '-', '_'), ' ', '_') = 'active'",
+      "error": "I was unable to build a valid query for this question after multiple attempts. Please try rephrasing your question."
+    },
+    {
+      "id": 33,
+      "question": "Summarize interest rates and maturity dates for active borrowing facilities",
+      "case": "Case A",
+      "mode": "summary",
+      "passed": true,
+      "latency": 17.173192262649536,
+      "sql": "SELECT\n  COUNT(*) AS active_loan_count,\n  AVG(CAST(l.interest_rate AS NUMERIC)) AS avg_interest_rate_percent,\n  MIN(CAST(l.interest_rate AS NUMERIC)) AS min_interest_rate_percent,\n  MAX(CAST(l.interest_rate AS NUMERIC)) AS max_interest_rate_percent,\n  MIN(DATE_ADD(CAST(l.disbursement_date AS DATE), INTERVAL CAST(l.tenure_months AS INT64) MONTH)) AS earliest_maturity_date,\n  MAX(DATE_ADD(CAST(l.disbursement_date AS DATE), INTERVAL CAST(l.tenure_months AS INT64) MONTH)) AS latest_maturity_date\nFROM\n  `views_executive.loans` AS l\nWHERE\n  LOWER(l.status) = 'active'",
+      "response_preview": "**Executive Summary \u2013 Active Borrowing Facilities**\n\n- **Total active facilities:** **100,706** loans  \n- **Average interest rate:** **16.0\u202f%** (15.99"
+    },
+    {
+      "id": 34,
+      "question": "Show total loan disbursements in South region",
+      "case": "Case B (Turn 1)",
+      "mode": "exact",
+      "passed": true,
+      "latency": 15.710946321487427,
+      "sql": "SELECT \n  SUM(CAST(l.disbursed_amount AS NUMERIC)) AS total_disbursed_amount\nFROM `views_executive.loans` AS l\nJOIN `views_executive.branches` AS b\n  ON l.branch_id = b.branch_id\nWHERE LOWER(b.region) = 'south'",
+      "response_preview": "[{'total_disbursed_amount': '7111697178.170000000'}]"
+    },
+    {
+      "id": 35,
+      "question": "filter that for vehicle loans only",
+      "case": "Case B (Turn 2)",
+      "mode": "exact",
+      "passed": true,
+      "latency": 7.2395241260528564,
+      "sql": "SELECT\n  l.loan_id,\n  l.customer_id,\n  l.disbursed_amount,\n  l.interest_rate,\n  l.tenure_months,\n  l.disbursement_date,\n  l.status\nFROM\n  `views_executive.loans` AS l\nWHERE\n  LOWER(l.product_id) LIKE '%vehicle%'",
+      "response_preview": "[]"
+    },
+    {
+      "id": 36,
+      "question": "summarize the top 3 branches in that list",
+      "case": "Case B (Turn 3)",
+      "mode": "summary",
+      "passed": true,
+      "latency": 9.60591745376587,
+      "sql": "SELECT\n  b.branch_id,\n  b.branch_name,\n  b.region,\n  b.state,\n  SUM(CAST(l.disbursed_amount AS NUMERIC)) AS total_disbursed_amount,\n  COUNT(l.loan_id) AS loan_count\nFROM `views_executive.loans` AS l\nJOIN `views_executive.branches` AS b\n  ON l.branch_id = b.branch_id\nGROUP BY\n  b.branch_id,\n  b.branch_name,\n  b.region,\n  b.state\nORDER BY total_disbursed_amount DESC\nLIMIT 3",
+      "response_preview": "**Executive Summary \u2013 Top 3 Branches (by total disbursed amount)**  \n\n| Rank | Branch (ID) | Region | State | Total Disbursed | Loans Issued | Avg. Di"
+    },
+    {
+      "id": 37,
+      "question": "Calculate total disbursement amount and loan count grouped by state and loan_type",
+      "case": "Case A",
+      "mode": "exact",
+      "passed": true,
+      "latency": 16.548396110534668,
+      "sql": "SELECT\n  c.state AS state,\n  p.loan_type,\n  SUM(CAST(l.disbursed_amount AS NUMERIC)) AS total_disbursement_amount,\n  COUNT(l.loan_id) AS loan_count\nFROM `views_executive.loans` AS l\nJOIN `views_executive.loan_products` AS p\n  ON l.product_id = p.product_id\nJOIN `views_executive.customers` AS c\n  ON l.customer_id = c.customer_id\nGROUP BY c.state, p.loan_type\nORDER BY c.state, p.loan_type",
+      "response_preview": "[{'state': 'Delhi', 'loan_type': 'business', 'total_disbursement_amount': '877472811.680000000', 'loan_count': 3666}, {'state': 'Delhi', 'loan_type': "
+    },
+    {
+      "id": 38,
+      "question": "Summarize monthly loan disbursement trends over the last 12 months",
+      "case": "Case A",
+      "mode": "summary",
+      "passed": true,
+      "latency": 21.076597690582275,
+      "sql": "WITH loan_data AS (\n  SELECT\n    DATE_TRUNC(DATE(l.disbursement_date), MONTH) AS month,\n    CAST(l.disbursed_amount AS NUMERIC) AS amount\n  FROM `views_executive.loans` AS l\n  WHERE DATE(l.disbursement_date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 12 MONTH)\n    AND DATE(l.disbursement_date) <= CURRENT_DATE()\n)\nSELECT\n  month,\n  SUM(amount) AS total_disbursed_amount,\n  COUNT(*) AS loan_count,\n  AVG(amount) AS average_disbursed_amount\nFROM loan_data\nGROUP BY month\nORDER BY month",
+      "response_preview": "**Executive Summary \u2013 Monthly Loan Disbursement Trends (Aug\u202f2025\u202f\u2013\u202fJun\u202f2026)**  \n\n| Month (Y\u2011M) | Disbursed\u202f$ (M) | Loans\u202fIssued | Avg\u202fLoan\u202f$ |\n|-----"
+    },
+    {
+      "id": 39,
+      "question": "What is the total EMI collection for NACH payments in the third quarter of 2023?",
+      "case": "Case A",
+      "mode": "exact",
+      "passed": true,
+      "latency": 17.533018827438354,
+      "sql": "SELECT\n  SUM(CAST(p.amount_paid AS NUMERIC)) AS total_nach_collection\nFROM\n  `views_executive.payments` AS p\nWHERE\n  LOWER(p.payment_mode) = 'nach'\n  AND CAST(p.payment_date AS DATE) BETWEEN DATE '2023-07-01' AND DATE '2023-09-30'",
+      "response_preview": "[{'total_nach_collection': None}]"
+    },
+    {
+      "id": 40,
+      "question": "Which employee with the highest incentive has approved the loan of lowest EMI?",
+      "case": "Case A",
+      "mode": "exact",
+      "passed": true,
+      "latency": 19.554139852523804,
+      "sql": "WITH emp_incentive AS (\n  SELECT\n    e.employee_id,\n    e.name AS employee_name,\n    SUM(\n      CAST(ip.base_amount AS NUMERIC) +\n      CAST(ip.bonus_amount AS NUMERIC) -\n      CAST(ip.deduction_amount AS NUMERIC)\n    ) AS total_incentive\n  FROM views_executive.incentive_payouts ip\n  JOIN views_executive.employees e\n    ON ip.employee_id = e.employee_id\n  GROUP BY e.employee_id, e.name\n),\n\nloan_min_emi AS (\n  SELECT\n    es.loan_id,\n    MIN(CAST(es.emi_amount AS NUMERIC)) AS min_emi\n  FROM views_executive.emi_schedule es\n  GROUP BY es.loan_id\n),\n\nemp_loans AS (\n  SELECT\n    ip.employee_id,\n    ip.loan_id\n  FROM views_executive.incentive_payouts ip\n)\n\nSELECT\n  ei.employee_name,\n  ei.total_incentive,\n  lme.loan_id,\n  lme.min_emi\nFROM emp_incentive ei\nJOIN emp_loans el\n  ON ei.employee_id = el.employee_id\nJOIN loan_min_emi lme\n  ON el.loan_id = lme.loan_id\nWHERE ei.total_incentive = (\n  SELECT MAX(total_incentive) FROM emp_incentive\n)\nORDER BY lme.min_emi ASC\nLIMIT 1",
+      "response_preview": "[{'employee_name': 'Chameli Gupta', 'total_incentive': '88732.820000000', 'loan_id': '3d10f186-bc22-4ef9-bf4e-e4920c27f285', 'min_emi': '2728.06000000"
+    },
+    {
+      "id": 41,
+      "question": "Summarize incentive payout totals by job role in the collections department",
+      "case": "Case A",
+      "mode": "summary",
+      "passed": true,
+      "latency": 19.45335817337036,
+      "sql": "SELECT\n  e.role AS job_role,\n  SUM(\n    CAST(i.base_amount AS NUMERIC) +\n    CAST(i.bonus_amount AS NUMERIC) -\n    CAST(i.deduction_amount AS NUMERIC)\n  ) AS total_payout_amount\nFROM `views_executive.incentive_payouts` AS i\nJOIN `views_executive.employees` AS e\n  ON i.employee_id = e.employee_id\nJOIN `views_executive.zoho_employee_records` AS z\n  ON e.employee_id = z.employee_id\nWHERE LOWER(z.department) = 'collections'\nGROUP BY e.role\nORDER BY total_payout_amount DESC",
+      "response_preview": "**Executive Summary \u2013 Incentive Payouts (Collections Department)**  \n\n- **Total Incentive Payout:** **$2,193,894.46**  \n- **Job Role Receiving Payout:"
+    },
+    {
+      "id": 42,
+      "question": "How many audit log events were recorded last month?",
+      "case": "Case A",
+      "mode": "exact",
+      "passed": true,
+      "latency": 13.738131046295166,
+      "sql": "SELECT\n  COUNT(*) AS audit_event_count\nFROM\n  `views_executive.audit_logs` AS al\nWHERE\n  DATE(al.action_timestamp) BETWEEN DATE_SUB(DATE_TRUNC(CURRENT_DATE(), MONTH), INTERVAL 1 MONTH)\n    AND DATE_SUB(DATE_TRUNC(CURRENT_DATE(), MONTH), INTERVAL 1 DAY)",
+      "response_preview": "[{'audit_event_count': 4735}]"
+    },
+    {
+      "id": 43,
+      "question": "List active loans for customers who have an approved insurance claim",
+      "case": "Case A",
+      "mode": "exact",
+      "passed": true,
+      "latency": 22.473756790161133,
+      "sql": "SELECT\n  l.loan_id,\n  l.customer_id,\n  l.disbursed_amount,\n  l.interest_rate,\n  l.tenure_months,\n  l.disbursement_date,\n  l.status AS loan_status,\n  ic.claim_id,\n  ic.claim_type,\n  ic.claim_amount,\n  ic.settlement_amount,\n  ic.claim_status\nFROM `views_executive.loans` AS l\nJOIN `views_executive.insurance_policies` AS ip\n  ON l.loan_id = ip.loan_id\nJOIN `views_executive.insurance_claims` AS ic\n  ON ip.policy_id = ic.policy_id\nWHERE LOWER(l.status) = 'active'\n  AND LOWER(ic.claim_status) = 'approved'",
+      "response_preview": "[{'loan_id': '83259d3e-f1d2-4e4f-b625-126633c0ddc4', 'customer_id': '08080329-715a-4ef6-8c46-d086a8fc95c8', 'disbursed_amount': 75676.54, 'interest_ra"
+    },
+    {
+      "id": 44,
+      "question": "Summarize loan rejection rates across different occupation categories",
+      "case": "Case A",
+      "mode": "summary",
+      "passed": true,
+      "latency": 17.994235277175903,
+      "sql": "SELECT\n  REPLACE(REPLACE(LOWER(c.occupation), '-', '_'), ' ', '_') AS occupation_category,\n  COUNT(*) AS total_applications,\n  COUNTIF(LOWER(la.status) = 'rejected') AS rejected_applications,\n  ROUND(\n    SAFE_DIVIDE(COUNTIF(LOWER(la.status) = 'rejected'), COUNT(*)) * 100,\n    2\n  ) AS rejection_rate_percent\nFROM `views_executive.loan_applications` AS la\nJOIN `views_executive.customers` AS c\n  ON la.customer_id = c.customer_id\nGROUP BY occupation_category\nORDER BY rejection_rate_percent DESC",
+      "response_preview": "**Executive Summary \u2013 Loan Rejection Rates by Occupation (Current Reporting Period)**  \n\n- **Overall Portfolio**  \n  - **Total applications:** **252,8"
+    },
+    {
+      "id": 45,
+      "question": "Find total overdue amount for loans with a active compliance flag",
+      "case": "Case A",
+      "mode": "exact",
+      "passed": true,
+      "latency": 15.849135875701904,
+      "sql": "SELECT\n  SUM(CAST(oa.overdue_amount AS NUMERIC)) AS total_overdue_amount\nFROM `views_executive.overdue_accounts` AS oa\nWHERE EXISTS (\n  SELECT 1\n  FROM `views_executive.compliance_flags` AS cf\n  WHERE cf.loan_id = oa.loan_id\n    AND LOWER(cf.status) IN ('open', 'under_investigation', 'escalated')\n)",
+      "response_preview": "[{'total_overdue_amount': '269968267.000000000'}]"
+    },
+    {
+      "id": 46,
+      "question": "List all active collections activity records in Delhi",
+      "case": "Case B (Turn 1)",
+      "mode": "exact",
+      "passed": true,
+      "latency": 16.856025218963623,
+      "sql": "SELECT\n  ca.activity_id,\n  ca.loan_id,\n  ca.employee_id,\n  ca.activity_type,\n  ca.activity_date,\n  ca.outcome,\n  l.status AS loan_status,\n  c.customer_id,\n  c.name AS customer_name,\n  c.city,\n  c.state\nFROM `views_executive.collections_activity` AS ca\nJOIN `views_executive.loans` AS l\n  ON ca.loan_id = l.loan_id\nJOIN `views_executive.customers` AS c\n  ON l.customer_id = c.customer_id\nWHERE LOWER(l.status) = 'active'\n  AND LOWER(c.city) = 'delhi'",
+      "response_preview": "[{'activity_id': '321d35f7-7770-47a9-8757-d51139ab195e', 'loan_id': 'db22b508-bdb8-471a-b70c-11dd70aad19d', 'employee_id': 'a61ae629-71d8-43f6-871b-79"
+    },
+    {
+      "id": 47,
+      "question": "only show outcome recovered",
+      "case": "Case B (Turn 2)",
+      "mode": "exact",
+      "passed": true,
+      "latency": 6.198698043823242,
+      "sql": "SELECT\n  ca.outcome\nFROM\n  views_executive.collections_activity AS ca\nWHERE\n  LOWER(ca.outcome) = 'paid'",
+      "response_preview": "[{'outcome': 'paid'}, {'outcome': 'paid'}, {'outcome': 'paid'}, {'outcome': 'paid'}, {'outcome': 'paid'}, {'outcome': 'paid'}, {'outcome': 'paid'}, {'"
+    },
+    {
+      "id": 48,
+      "question": "summarize the total recovered amount by agent name",
+      "case": "Case B (Turn 3)",
+      "mode": "summary",
+      "passed": true,
+      "latency": 11.48790693283081,
+      "sql": "SELECT\n  e.name AS agent_name,\n  SUM(CAST(l.disbursed_amount AS NUMERIC)) AS total_recovered_amount\nFROM `views_executive.collections_activity` AS ca\nJOIN `views_executive.loans` AS l\n  ON ca.loan_id = l.loan_id\nJOIN `views_executive.employees` AS e\n  ON ca.employee_id = e.employee_id\nWHERE LOWER(ca.outcome) = 'paid'\nGROUP BY e.name\nORDER BY total_recovered_amount DESC",
+      "response_preview": "**Executive Summary \u2013 Recovered Amounts by Agent (275 agents)**  \n\n| Metric | Value |\n|--------|-------|\n| **Total recovered amount** (all agents) | *"
+    },
+    {
+      "id": 49,
+      "question": "What is the total principal vs total interest collected across all closed loans?",
+      "case": "Case A",
+      "mode": "exact",
+      "passed": true,
+      "latency": 18.45326256752014,
+      "sql": "SELECT\n  SUM(CAST(es.principal_component AS NUMERIC)) AS total_principal_collected,\n  SUM(CAST(es.interest_component AS NUMERIC))   AS total_interest_collected\nFROM `views_executive.loans` AS l\nJOIN `views_executive.emi_schedule` AS es\n  ON l.loan_id = es.loan_id\nWHERE LOWER(l.status) = 'closed'",
+      "response_preview": "[{'total_principal_collected': '7057808093.340000000', 'total_interest_collected': '1682936267.100000000'}]"
+    },
+    {
+      "id": 50,
+      "question": "Provide an executive summary of total loan portfolio health, total overdue, and NPA ratio",
+      "case": "Case A",
+      "mode": "summary",
+      "passed": true,
+      "latency": 21.901745796203613,
+      "sql": "WITH loan_agg AS (\n  SELECT\n    SUM(CAST(l.disbursed_amount AS NUMERIC)) AS total_portfolio,\n    SUM(CASE \n          WHEN LOWER(l.status) = 'npa' \n          THEN CAST(l.disbursed_amount AS NUMERIC) \n          ELSE 0 \n        END) AS npa_amount\n  FROM `views_executive.loans` AS l\n),\noverdue_agg AS (\n  SELECT\n    SUM(CAST(o.overdue_amount AS NUMERIC)) AS total_overdue\n  FROM `views_executive.overdue_accounts` AS o\n)\nSELECT\n  loan_agg.total_portfolio,\n  overdue_agg.total_overdue,\n  SAFE_DIVIDE(loan_agg.npa_amount, loan_agg.total_portfolio) * 100 AS npa_ratio_percent\nFROM loan_agg\nCROSS JOIN overdue_agg",
+      "response_preview": "**Executive Summary \u2013 Loan Portfolio Health**\n\n- **Total loan portfolio:** **$35.47\u202fbn**  \n- **Total overdue amount:** **$5.04\u202fbn**  \n\n- **Non\u2011Perform"
+    }
+  ]
+}

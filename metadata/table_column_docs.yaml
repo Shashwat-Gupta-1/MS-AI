@@ -58,8 +58,7 @@ tables:
     description: 'Indian state associated with the record. One of: Rajasthan, Maharashtra,
       Delhi, Karnataka, Gujarat, Tamil Nadu, Uttar Pradesh, West Bengal.'
   - column: occupation
-    description: 'Customer''s stated occupation category, used in credit assessment.
-      One of: salaried, self_employed, business_owner, farmer.'
+    description: "Customer's stated occupation category. One of: salaried, self_employed (also matches user inputs like 'self-employed' or 'self employed'), business_owner (also matches 'business owner'), farmer."
   - column: income_band
     description: 'Customer''s self-declared annual income bracket. One of: 0-3L, 3-6L,
       6-12L, 12L+.'
@@ -196,15 +195,41 @@ tables:
 - dataset: lms
   system_name: LMS
   table: emi_schedule
-  table_description: "The full reducing-balance amortization schedule, one row per\
-    \ EMI installment per loan \u2014 the ground truth for what's owed and when."
-  columns: []
+  table_description: "The full reducing-balance amortization schedule, one row per EMI installment per loan — the ground truth for what's owed and when."
+  columns:
+  - column: emi_id
+    description: "Primary key — uniquely identifies each scheduled EMI installment row."
+  - column: loan_id
+    description: "Foreign key to loans table — identifies the loan this installment belongs to."
+  - column: installment_no
+    description: "Sequence number of the installment (1, 2, 3, ... up to tenure_months)."
+  - column: due_date
+    description: "Due date on which this EMI installment is scheduled to be paid."
+  - column: emi_amount
+    description: "Total EMI amount due for this installment (principal + interest)."
+  - column: principal_component
+    description: "Principal portion of the total EMI installment amount."
+  - column: interest_component
+    description: "Interest portion of the total EMI installment amount."
+  - column: outstanding_after
+    description: "Remaining principal balance outstanding on the loan after this installment."
 - dataset: lms
   system_name: LMS
   table: payments
-  table_description: EMIs that have actually been paid, with realistic on-time/late/missed
-    timing derived from each loan's status.
-  columns: []
+  table_description: "EMIs that have actually been paid, with realistic on-time/late/missed timing derived from each loan's status."
+  columns:
+  - column: payment_id
+    description: "Primary key — uniquely identifies each actual payment collection event."
+  - column: emi_id
+    description: "Foreign key to emi_schedule table — identifies the scheduled EMI installment paid."
+  - column: loan_id
+    description: "Foreign key to loans table — identifies the loan this payment belongs to."
+  - column: amount_paid
+    description: "Actual monetary amount paid/collected for this EMI installment. Use for all actual collected EMI payment, revenue, and recovery queries (do NOT compute manual math on disbursement_date when actual payment records exist)."
+  - column: payment_date
+    description: "Date on which the payment was actually collected/processed."
+  - column: payment_mode
+    description: "Payment channel/mode used by customer (e.g., nach, upi, netbanking, cheque, cash)."
 - dataset: lms
   system_name: LMS
   table: overdue_accounts
@@ -331,8 +356,7 @@ tables:
     description: "Strategic purpose of the campaign \u2014 awareness, acquisition,\
       \ retention, or cross-sell. One of: awareness, acquisition, retention, cross_sell."
   - column: product_id
-    description: "Foreign key to `loan_products` \u2014 the loan product involved.\
-      \ Foreign key into `loan_products`."
+    description: "Foreign key to `loan_products` — loan product category promoted by this campaign. (Note: To query acquired customers or leads for a specific campaign, join `leads` on campaign_id, NOT product_id alone)."
   - column: target_region
     description: 'Region the campaign is targeted at. One of: North, South, East,
       West, Central.'

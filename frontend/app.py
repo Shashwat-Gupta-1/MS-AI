@@ -32,6 +32,32 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# -----------------------------
+# CUSTOM CSS: STICKY BOTTOM DOCK
+# -----------------------------
+st.markdown("""
+<style>
+/* Pin search input dock to bottom of viewport */
+div.element-container:has(div.st-key-prompt_box) {
+    position: fixed !important;
+    bottom: 0px !important;
+    left: 21rem !important;
+    right: 2rem !important;
+    background-color: var(--background-color, #0e1117) !important;
+    padding: 14px 20px 20px 20px !important;
+    z-index: 99999 !important;
+    box-shadow: 0px -6px 20px rgba(0, 0, 0, 0.3) !important;
+    border-top: 1px solid rgba(128, 128, 128, 0.25) !important;
+    border-radius: 12px 12px 0 0 !important;
+}
+
+/* Add bottom padding to main container so messages don't get covered */
+.main .block-container {
+    padding-bottom: 180px !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
 
 def init_session_state():
     """Initialize Streamlit session state keys."""

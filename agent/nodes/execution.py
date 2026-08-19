@@ -34,7 +34,8 @@ def execution_node(state: GraphState) -> Dict[str, Any]:
     
     try:
         query_job = client.query(sql)
-        df = query_job.to_dataframe(max_results=MAX_ROW_COUNT_CAP)
+        max_rows = None if output_mode == "exact" else MAX_ROW_COUNT_CAP
+        df = query_job.to_dataframe(max_results=max_rows)
         
         exec_latency = (time.time() - start_time) * 1000
         records = df.to_dict(orient="records")

@@ -11,9 +11,10 @@ tables:
     generator: uuid
     primary_key: true
   - name: customer_id
-    generator: ref
-    ref_table: customers
+    generator: same_as_ref
+    ref_table: loans
     ref_key: customer_id
+    join_on: loan_id
   - name: loan_id
     generator: ref
     ref_table: loans
