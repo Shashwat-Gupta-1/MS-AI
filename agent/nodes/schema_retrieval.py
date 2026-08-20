@@ -336,8 +336,9 @@ def schema_retrieval_node(state: GraphState) -> Dict[str, Any]:
     question = state.get("question", "")
     matched_domains = state.get("final_domains", [])
 
-    # Step 1: Column vector search
-    candidate_tables = get_candidate_tables_for_domains(matched_domains)
+    # Step 1: Candidate tables from retrieval.py
+    retrieved = state.get("retrieved_tables") or []
+    candidate_tables = set(retrieved) if retrieved else get_candidate_tables_for_domains(matched_domains)
     cand_columns = vector_search_top_k_columns(question, candidate_tables, top_k=SCHEMA_RETRIEVAL_TOP_K)
 
     # Step 2: LLM rerank into anchors

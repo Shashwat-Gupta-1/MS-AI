@@ -15,6 +15,11 @@ from agent.state import GraphState
 from agent.groq_client import invoke_groq_with_retry
 from agent.logging_store import DEFAULT_LOGGING_STORE
 
+try:
+    from query_router import decompose_query
+except ImportError:
+    decompose_query = None
+
 
 def load_role_domain_access() -> Dict[str, Any]:
     """Load role -> allowed_domains mapping from role_domain_access.yaml."""
@@ -149,37 +154,49 @@ def domain_match_node(state: GraphState) -> Dict[str, Any]:
     keyword_matched = keyword_domain_match(question, ALL_KNOWN_DOMAINS)
 
     
-    # 2c: LLM classification scoped ONLY to allowed domains
-    filtered_summaries = []
-    for line in DOMAIN_SUMMARIES_TEXT.split("\n"):
-        if any(dom in line.lower() for dom in allowed_domains):
-            filtered_summaries.append(line)
-    summary_context = "\n".join(filtered_summaries) if filtered_summaries else DOMAIN_SUMMARIES_TEXT
-    
-    prompt = DOMAIN_CLASSIFIER_PROMPT.format(allowed_summaries=summary_context)
-    messages = [
-        SystemMessage(content=prompt),
-        HumanMessage(content=f"User Role: {role}\nQuestion: {question}"),
-    ]
-    
+    # 2c: Decompose query & classify domain using query_router if available
     llm_matched = []
-    llm_model = None
-    tokens_used = None
-    try:
-        response = invoke_groq_with_retry(messages, temperature=0.0)
-
-        meta = getattr(response, "response_metadata", {}) or {}
-        llm_model = meta.get("model_name")
-        tokens_used = meta.get("token_usage")
-        raw_output = response.content.strip().lower()
-        if "none" not in raw_output:
-            for item in raw_output.split(","):
-                dom = item.strip()
-                if dom in allowed_domains:
+    extracted_filters = []
+    search_concept = question
+    
+    if decompose_query is not None:
+        try:
+            decomp = decompose_query(question)
+            search_concept = decomp.get("search_concept", question)
+            extracted_filters = decomp.get("filters", [])
+            decomp_domains = [d.lower() for d in decomp.get("domains", [])]
+            for dom in decomp_domains:
+                if dom in allowed_domains and dom not in llm_matched:
                     llm_matched.append(dom)
-    except Exception as e:
-        # Fallback to keyword match if LLM call fails
-        llm_matched = []
+        except Exception as e:
+            logger.warning(f"decompose_query error: {e}")
+
+    if not llm_matched:
+        filtered_summaries = []
+        for line in DOMAIN_SUMMARIES_TEXT.split("\n"):
+            if any(dom in line.lower() for dom in allowed_domains):
+                filtered_summaries.append(line)
+        summary_context = "\n".join(filtered_summaries) if filtered_summaries else DOMAIN_SUMMARIES_TEXT
+        
+        prompt = DOMAIN_CLASSIFIER_PROMPT.format(allowed_summaries=summary_context)
+        messages = [
+            SystemMessage(content=prompt),
+            HumanMessage(content=f"User Role: {role}\nQuestion: {question}"),
+        ]
+        
+        try:
+            response = invoke_groq_with_retry(messages, temperature=0.0)
+            meta = getattr(response, "response_metadata", {}) or {}
+            llm_model = meta.get("model_name")
+            tokens_used = meta.get("token_usage")
+            raw_output = response.content.strip().lower()
+            if "none" not in raw_output:
+                for item in raw_output.split(","):
+                    dom = item.strip()
+                    if dom in allowed_domains:
+                        llm_matched.append(dom)
+        except Exception:
+            llm_matched = []
 
     # 2d: Combine signals safely
     unauth_keywords = [d for d in keyword_matched if d not in allowed_domains]

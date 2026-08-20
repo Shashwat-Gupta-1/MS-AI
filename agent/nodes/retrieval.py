@@ -14,6 +14,11 @@ from config import METADATA_DIR
 from agent.state import GraphState
 from agent.logging_store import DEFAULT_LOGGING_STORE
 
+try:
+    from retrieval import retrieve_relevant_tables
+except ImportError:
+    retrieve_relevant_tables = None
+
 
 def load_domain_tags() -> List[Dict[str, Any]]:
     """Load domain_tags.yaml mapping tables to domains."""
@@ -144,18 +149,34 @@ def retrieval_node(state: GraphState) -> Dict[str, Any]:
     session_id = state.get("session_id", "default")
     role = state.get("role", "unknown")
     matched_domains = state.get("final_domains", [])
+    question = state.get("search_concept") or state.get("question", "")
     
-    # 3a: Filter candidates by domain
-    candidates = get_candidate_tables_for_domains(matched_domains)
+    candidates = set()
+    
+    # 3a: Call hybrid vector + keyword table retrieval if available
+    if retrieve_relevant_tables is not None:
+        try:
+            rel_tables = retrieve_relevant_tables(
+                question=question,
+                domain=matched_domains,
+                user_role=role,
+                hybrid=True
+            )
+            for item in rel_tables:
+                if isinstance(item, dict) and "table_name" in item:
+                    candidates.add(item["table_name"])
+        except Exception as e:
+            candidates = set()
+
+    if not candidates:
+        candidates = get_candidate_tables_for_domains(matched_domains)
     
     if not candidates:
-        # Fallback to general hub tables if no candidate found
         candidates = {"customers", "loans", "employees", "branches"}
         
-    # 3b: BFS expansion (2 hops)
-    final_tables = bfs_expand_relationships(candidates, max_hops=2)
+    final_tables = candidates
     
-    # 3c: Schema context assembly
+    # 3b: Schema context assembly
     schema_text = assemble_schema_context(final_tables, role)
     join_paths = get_join_path_descriptions(final_tables)
     
