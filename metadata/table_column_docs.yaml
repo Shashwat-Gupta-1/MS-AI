@@ -554,8 +554,7 @@ tables:
     description: 'Whether the lead clicked through on the campaign content. One of:
       yes, no.'
   - column: converted
-    description: 'Whether this specific response ultimately led to a conversion. One
-      of: yes, no.'
+    description: 'Whether this specific response ultimately led to a conversion. Use boolean TRUE or FALSE.'
   - column: device_type
     description: 'Device used to respond to the campaign. One of: mobile, desktop,
       tablet.'

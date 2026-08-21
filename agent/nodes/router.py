@@ -25,7 +25,7 @@ LATEST USER QUESTION:
 {question}
 
 Classify into one of two options:
-- FOLLOW_UP: The question relies on context, filters, or entities from the prior turn (e.g. "now break that down by branch", "what about last month?", "show me just gold loans").
+- FOLLOW_UP: The question relies on context, filters, or entities from the prior turn (e.g. "now break that down by branch", "what about last month?", "show me just gold loans").If the new question is identical or highly similar to the previous question, also classify it as a FOLLOW_UP to reuse the existing context.
 - NEW_TOPIC: The question introduces a completely new topic or query independent of previous turns.
 
 Respond with EXACTLY two lines:

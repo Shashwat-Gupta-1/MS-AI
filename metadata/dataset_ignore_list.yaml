@@ -1,0 +1,10 @@
+# List of BigQuery datasets to completely ignore during the schema scanning process
+# This is used by ingest_sandbox_schema.py
+
+ignore_exact_matches:
+  - rag_meta
+  - temp_backup
+
+ignore_prefixes:
+  - views_
+  - _script_

@@ -3,6 +3,7 @@ output/
 *.csv
 /.env
 .venv/
+venv/
 /scripts
 /logs
 /SIDE STUFF
