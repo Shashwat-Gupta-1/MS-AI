@@ -9,13 +9,13 @@ in a batch-friendly way. Bypasses LLM completely for 0 cost and instant speed!
 import os
 import uuid
 import time
-import google.generativeai as genai
+# import google.generativeai as genai # Temporarily removed to avoid Windows pip lock errors
 from google.cloud import bigquery
 
 PROJECT_ID = "project-f118f2cb-f557-4d4f-990"
 DATASET    = "rag_meta"
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+# genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
 DOMAIN_MAPPING = {
     # Customers & KYC
@@ -73,31 +73,17 @@ DOMAIN_MAPPING = {
 def generate_questions(chunk_id: str, clean_text: str = "") -> str:
     """
     1. Checks if a human-curated static question set exists in DOMAIN_MAPPING.
-    2. If not, uses Gemini to dynamically generate questions for the new/unmapped schema.
+    2. If not, uses generic fallback instead of Gemini.
     """
     for key, questions in DOMAIN_MAPPING.items():
         if key in chunk_id:
             return questions
             
-    # Gemini LLM Fallback for new schema items not yet in dictionary
-    print(f"   [Gemini Auto-Augment] Generating questions for unmapped chunk: '{chunk_id}'...")
-    try:
-        model = genai.GenerativeModel("gemini-3.6-flash")
-        prompt = f"""
-Given the following database column/table description, generate 3-4 domain-specific business questions that a user might ask to find this data.
-Use synonyms and industry terms. Output ONLY the questions separated by spaces.
-
-Description:
-{clean_text}
-"""
-        response = model.generate_content(prompt)
-        time.sleep(1) # Prevent API rate limit
-        return response.text.strip().replace('\n', ' ')
-    except Exception as e:
-        print(f"   [Gemini Warning] Could not generate questions for {chunk_id}: {e}")
-        parts = chunk_id.split('.')
-        name = parts[-1].replace('_', ' ') if parts else "data"
-        return f"What is the {name}? Tell me about {name}."
+    # Generic fallback
+    print(f"   [Auto-Augment] Using generic fallback for unmapped chunk: '{chunk_id}'...")
+    parts = chunk_id.split('.')
+    name = parts[-1].replace('_', ' ') if parts else "data"
+    return f"What is the {name}? Tell me about {name}."
 
 def main():
     bq = bigquery.Client(project=PROJECT_ID)
@@ -151,7 +137,15 @@ def main():
     
     update_sql = f"""
         UPDATE `{PROJECT_ID}.{DATASET}.table_chunks` main
-        SET chunk_text = stg.chunk_text
+        SET 
+            chunk_text = stg.chunk_text,
+            embedding = (
+              SELECT ml_generate_embedding_result
+              FROM ML.GENERATE_EMBEDDING(
+                MODEL `{PROJECT_ID}.{DATASET}.text_embedding_model`,
+                (SELECT stg.chunk_text AS content)
+              )
+            )
         FROM `{stg_table_id}` stg
         WHERE main.chunk_id = stg.chunk_id
     """

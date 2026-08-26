@@ -33,7 +33,7 @@ from langchain_core.messages import SystemMessage, HumanMessage
 logger = logging.getLogger("msai.audit")
 
 MODEL_ID = f"{PROJECT_ID}.{METADATA_DATASET}.text_embedding_model"
-COLUMN_DOCS_TABLE = f"{PROJECT_ID}.{METADATA_DATASET}.column_docs"
+TABLE_CHUNKS_TABLE = f"{PROJECT_ID}.{METADATA_DATASET}.table_chunks"
 
 RERANK_SYSTEM_PROMPT = """You are a Schema Reranking & Disambiguation Agent for a database analytics pipeline.
 Given a User Question and a list of Candidate Columns retrieved via vector search, select only the columns strictly needed to answer the question, plus any Foreign Key join columns required to connect those tables.
@@ -64,7 +64,13 @@ Respond with ONLY a valid JSON object in the following format:
 
 
 def vector_search_top_k_columns(question: str, candidate_tables: Set[str], top_k: int) -> List[Dict[str, Any]]:
-    """Step 1: Perform vector similarity search against rag_meta.column_docs in BigQuery."""
+    """Step 1: Perform vector similarity search against rag_meta.table_chunks (chunk_type='column_doc').
+    
+    Uses business-question-enriched column chunks (injected via augment_with_dict.py) instead of
+    bare column_docs descriptions, dramatically improving semantic match accuracy.
+    chunk_text format: 'Questions: <injected questions> --- <original column description>'
+    chunk_id format:   '<table_name>.col.<column_name>' (e.g., 'loans.col.disbursed_amount')
+    """
     client = get_client()
 
     if not candidate_tables:
@@ -73,6 +79,8 @@ def vector_search_top_k_columns(question: str, candidate_tables: Set[str], top_k
     tables_filter = list(candidate_tables)
 
     # Fetch question embedding and calculate cosine distance in BigQuery
+    # Searching table_chunks filtered to column_doc chunks only — these contain
+    # injected business questions which dramatically improve retrieval accuracy.
     sql = f"""
     WITH q_emb AS (
       SELECT ml_generate_embedding_result AS emb
@@ -82,13 +90,13 @@ def vector_search_top_k_columns(question: str, candidate_tables: Set[str], top_k
       )
     )
     SELECT
-      c.table_name,
-      c.column_name,
-      c.description,
-      c.data_type,
+      c.table_id,
+      c.chunk_id,
+      c.chunk_text,
       ML.DISTANCE(c.embedding, q.emb, 'COSINE') AS distance
-    FROM `{COLUMN_DOCS_TABLE}` c, q_emb q
-    WHERE c.table_name IN UNNEST(@candidate_tables)
+    FROM `{TABLE_CHUNKS_TABLE}` c, q_emb q
+    WHERE c.table_id IN UNNEST(@candidate_tables)
+      AND c.chunk_type = 'column_doc'
       AND ARRAY_LENGTH(c.embedding) > 0
     ORDER BY distance ASC
     LIMIT {top_k}
@@ -105,19 +113,35 @@ def vector_search_top_k_columns(question: str, candidate_tables: Set[str], top_k
         df = client.query(sql, job_config=job_config).to_dataframe()
         records = []
         for _, r in df.iterrows():
-            # Convert cosine distance (0=identical, 2=opposite) to similarity score (1 = identical)
+            # Convert cosine distance (0=identical, 2=opposite) to similarity score (1=identical)
             dist = float(r["distance"])
             sim_score = max(0.0, 1.0 - (dist / 2.0))
+
+            # Parse table_name and column_name from chunk_id
+            # chunk_id format: "loans.col.disbursed_amount" → table="loans", column="disbursed_amount"
+            chunk_id = str(r["chunk_id"] or "")
+            parts = chunk_id.split(".")
+            table_name = str(r["table_id"] or "")
+            # Last part of chunk_id is always the column name (handles edge cases with dots in names)
+            column_name = parts[-1] if len(parts) >= 3 else chunk_id
+
+            # chunk_text contains injected business questions + original description
+            # Format: "Questions: <questions> --- <original description>"
+            # We strip out the questions here so the LLM reranker doesn't get overwhelmed and crash.
+            chunk_text = str(r["chunk_text"] or "")
+            if " --- " in chunk_text:
+                chunk_text = chunk_text.split(" --- ", 1)[-1]
+
             records.append({
-                "table_name": r["table_name"],
-                "column_name": r["column_name"],
-                "description": r["description"] or "",
-                "data_type": r["data_type"] or "STRING",
+                "table_name": table_name,
+                "column_name": column_name,
+                "description": chunk_text,
+                "data_type": "STRING",  # table_chunks does not store data_type; defaulting
                 "similarity_score": round(sim_score, 4),
             })
         return records
     except Exception as e:
-        logger.warning(f"Vector search failed, returning empty candidates: {e}")
+        logger.warning(f"Vector search failed on table_chunks, returning empty candidates: {e}")
         return []
 
 

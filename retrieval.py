@@ -120,7 +120,7 @@ def retrieve_relevant_tables(
       'embedding',
       (
         SELECT ml_generate_embedding_result FROM ML.GENERATE_EMBEDDING(
-          MODEL `{PROJECT_ID}.{DATASET}.vertex_embed_model`,
+          MODEL `{PROJECT_ID}.{DATASET}.text_embedding_model`,
           (SELECT @question as content),
           STRUCT(TRUE AS flatten_json_output, 'RETRIEVAL_QUERY' AS task_type)
         )
@@ -142,16 +142,23 @@ def retrieve_relevant_tables(
     else:
         domains = domain
 
-    # Fetch candidate tables from domain_summaries based on the selected domains
+    # Fetch candidate tables from local domain_tags.yaml based on the selected domains
     candidate_tables = []
     if domains:
-        domains_list_str = ", ".join([f"'{d}'" for d in domains])
-        domain_query = f"SELECT tables_in_domain FROM `{PROJECT_ID}.rag_meta.domain_summaries` WHERE domain_name IN ({domains_list_str})"
         try:
-            for row in client.query(domain_query).result():
-                candidate_tables.extend(row.tables_in_domain)
+            import yaml
+            from pathlib import Path
+            yaml_path = Path("metadata/domain_tags.yaml")
+            if yaml_path.exists():
+                with open(yaml_path, "r", encoding="utf-8") as f:
+                    data = yaml.safe_load(f)
+                    domain_set = set(domains)
+                    for entry in data.get("tables", []):
+                        t_domains = set(entry.get("domain_tags", []))
+                        if t_domains.intersection(domain_set):
+                            candidate_tables.append(entry.get("table"))
         except Exception as e:
-            print(f"Warning: Failed to fetch candidate tables from domain_summaries: {e}")
+            print(f"Warning: Failed to fetch candidate tables from yaml: {e}")
 
     query_params = [
         bigquery.ScalarQueryParameter("question", "STRING", question),

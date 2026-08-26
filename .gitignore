@@ -8,4 +8,14 @@ venv/
 /logs
 /SIDE STUFF
 /.agents
+/baseline_eval_results.json
+/eval_golden_100.json
+/generate_golden_eval.py
+/run_baseline_eval.py
+/extract_sql_to_markdown.py
+/antigravity_50_queries.md
+/50_queries_to_test.md
+/generate_golden_sql.py
 
+__pycache__/
+*.pyc
